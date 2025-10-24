@@ -168,7 +168,7 @@
           ]
         },
         "options": {
-          "timeout": 30000
+          "timeout": 60000
         }
       },
       "id": "fdc6f465-ee76-46e2-98a2-2045cf2584ce",
@@ -183,7 +183,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first();\nconst response = item.json;\nconst binary = item.binary;\nconst config = $('Process Data Sources').item.json;\nconst retryCount = config.retryCount || 0;\nconst MAX_RETRIES = 2;\n\n// 強制重試次數保護\nif (retryCount >= MAX_RETRIES) {\n  return [{\n    json: {\n      ...response,\n      ...config,\n      action: 'fail',\n      reason: `已達最大重試次數 (${retryCount})`,\n      forceStop: true\n    }\n  }];\n}\n\n// 檢查成功條件\nconst hasError = !!response.error;\nconst statusCode = response.statusCode || 0;\nconst hasBinary = binary && binary.data;\nconst isSuccessStatus = statusCode >= 200 && statusCode < 300;\n\n// 如果有 binary 數據且沒有錯誤，視為成功\nif (hasBinary && !hasError) {\n  return [{\n    json: {\n      ...response,\n      ...config,\n      action: 'success'\n    },\n    binary\n  }];\n}\n\n// 如果狀態碼是 2xx 且沒有錯誤，視為成功\nif (isSuccessStatus && !hasError) {\n  return [{\n    json: {\n      ...response,\n      ...config,\n      action: 'success'\n    },\n    binary\n  }];\n}\n\n// 錯誤分類\nlet action = 'fail';\nlet reason = 'Unknown error';\n\nif (statusCode === 404) {\n  action = 'skip';\n  reason = 'View 不存在 (404)';\n} else if (statusCode === 401 || statusCode >= 500 || response.error?.code === 'ETIMEDOUT') {\n  action = 'retry';\n  reason = `HTTP ${statusCode || response.error?.code}`;\n} else {\n  action = 'fail';\n  reason = response.error?.message || `HTTP ${statusCode}`;\n}\n\n// 返回結果\nreturn [{\n  json: {\n    ...response,\n    ...config,\n    retryCount: action === 'retry' ? retryCount + 1 : retryCount,\n    action,\n    reason\n  },\n  binary\n}];"
+        "jsCode": "const item = $input.first();\nconst response = item.json;\nconst binary = item.binary;\nconst config = $('Process Data Sources').item.json;\nconst retryCount = config.retryCount || 0;\nconst MAX_RETRIES = 3;\n\n// 強制重試次數保護\nif (retryCount >= MAX_RETRIES) {\n  return [{\n    json: {\n      ...response,\n      ...config,\n      action: 'fail',\n      reason: `已達最大重試次數 (${retryCount})`,\n      forceStop: true,\n      finalStatus: 'failed_after_retries'\n    }\n  }];\n}\n\n// 檢查成功條件\nconst hasError = !!response.error;\nconst statusCode = response.statusCode || 0;\nconst hasBinary = binary && binary.data;\nconst isSuccessStatus = statusCode >= 200 && statusCode < 300;\n\n// 如果有 binary 數據且沒有錯誤，視為成功\nif (hasBinary && !hasError) {\n  return [{\n    json: {\n      ...response,\n      ...config,\n      action: 'success',\n      processingTime: new Date() - new Date(config.startTime)\n    },\n    binary\n  }];\n}\n\n// 如果狀態碼是 2xx 且沒有錯誤，視為成功\nif (isSuccessStatus && !hasError) {\n  return [{\n    json: {\n      ...response,\n      ...config,\n      action: 'success',\n      processingTime: new Date() - new Date(config.startTime)\n    },\n    binary\n  }];\n}\n\n// 定義可重試的錯誤代碼\nconst RETRYABLE_ERROR_CODES = ['ETIMEDOUT', 'ECONNABORTED', 'ECONNRESET', 'ENOTFOUND', 'ENETUNREACH', 'ECONNREFUSED'];\nconst errorCode = response.error?.code;\nconst isRetryableError = errorCode && RETRYABLE_ERROR_CODES.includes(errorCode);\n\n// 錯誤分類\nlet action = 'fail';\nlet reason = 'Unknown error';\nlet waitTime = 0;\n\nif (statusCode === 404) {\n  action = 'skip';\n  reason = 'View 不存在 (404)';\n} else if (statusCode === 401 || statusCode >= 500 || isRetryableError) {\n  action = 'retry';\n  reason = `${response.error?.message || 'HTTP ' + statusCode} (錯誤碼: ${errorCode || statusCode})`;\n  // 指數退避策略: 5秒, 10秒, 20秒\n  waitTime = Math.pow(2, retryCount) * 5;\n} else {\n  action = 'fail';\n  reason = response.error?.message || `HTTP ${statusCode}`;\n}\n\n// 記錄重試資訊\nconst retryInfo = action === 'retry' ? {\n  retryAttempt: retryCount + 1,\n  maxRetries: MAX_RETRIES,\n  nextWaitTime: waitTime,\n  errorType: errorCode || statusCode\n} : {};\n\n// 返回結果\nreturn [{\n  json: {\n    ...response,\n    ...config,\n    retryCount: action === 'retry' ? retryCount + 1 : retryCount,\n    action,\n    reason,\n    waitTime,\n    ...retryInfo,\n    checkTime: new Date().toISOString()\n  },\n  binary\n}];"
       },
       "id": "f931f7f8-d7d9-481a-b321-fda295463650",
       "name": "Check Response Status",
@@ -265,9 +265,12 @@
       }
     },
     {
-      "parameters": {},
+      "parameters": {
+        "amount": 3,
+        "unit": "seconds"
+      },
       "id": "776ddf2e-358b-4c0d-ab5a-5ccf68878927",
-      "name": "Wait for 5s",
+      "name": "Wait 3s Between Uploads",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
@@ -278,7 +281,8 @@
     },
     {
       "parameters": {
-        "amount": 3
+        "amount": "={{$json.waitTime}}",
+        "unit": "seconds"
       },
       "id": "e6ec8ba7-c60a-4d5c-85f8-8e5a0b57c218",
       "name": "Wait Before Retry",
@@ -292,7 +296,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconsole.log(`⏭️ [跳過] ${item.name} - 原因: ${item.reason}`);\nreturn [{ json: { ...item, status: 'skipped' } }];"
+        "jsCode": "const item = $input.first().json;\nconst timestamp = new Date().toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei' });\nconsole.log(`⏭️  [SKIPPED] ${item.name} (${item.index}/${item.total})`);\nconsole.log(`    Reason: ${item.reason}`);\nconsole.log(`    View ID: ${item.viewId}`);\nconsole.log(`    Time: ${timestamp}`);\nreturn [{ json: { ...item, status: 'skipped', completedAt: new Date().toISOString() } }];"
       },
       "id": "6d1826b1-85ee-4617-956c-78f1e6621d2b",
       "name": "Log Skipped Item",
@@ -305,7 +309,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconsole.log(`❌ [失敗] ${item.name} - ${item.reason}`);\nreturn [{ json: { ...item, status: 'failed' } }];"
+        "jsCode": "const item = $input.first().json;\nconst timestamp = new Date().toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei' });\nconst retryAttempts = item.retryCount || 0;\nconsole.log(`❌ [FAILED] ${item.name} (${item.index}/${item.total})`);\nconsole.log(`    Reason: ${item.reason}`);\nif (retryAttempts > 0) {\n  console.log(`    Retry Attempts: ${retryAttempts}`);\n}\nconsole.log(`    Error Type: ${item.errorType || 'Unknown'}`);\nconsole.log(`    View ID: ${item.viewId}`);\nconsole.log(`    Time: ${timestamp}`);\nreturn [{ json: { ...item, status: 'failed', completedAt: new Date().toISOString() } }];"
       },
       "id": "7177396b-15b1-4db2-bad5-9dd9fb98b3b6",
       "name": "Log Failed Item",
@@ -318,7 +322,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Workflow execution completed - summary statistics\nconst now = new Date();\nconst endTime = now.toISOString();\nconst dateStr = now.toLocaleDateString('en-US', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' });\nconst timeStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });\n\n// Get total currency count from input\nconst items = $input.all();\nconst totalCurrencies = items.length || 30; // Default to 30 if unable to get from input\n\nconst summary = {\n  workflowName: 'Currency Daily Report',\n  date: dateStr,\n  time: timeStr,\n  endTime: endTime,\n  totalCurrencies: totalCurrencies,\n  status: 'completed',\n  message: `Currency Daily Report workflow completed\\nProcessed ${totalCurrencies} currencies\\nExecution time: ${dateStr} ${timeStr}`\n};\n\nreturn [{ json: summary }];"
+        "jsCode": "// Workflow execution completed - summary statistics\nconst now = new Date();\nconst endTime = now.toISOString();\nconst dateStr = now.toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' });\nconst timeStr = now.toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });\n\n// Get total currency count from input\nconst items = $input.all();\nconst totalCurrencies = items.length || 30;\nconst firstItem = items[0]?.json;\nconst workflowStartTime = firstItem?.startTime || endTime;\n\n// Calculate total execution time\nconst executionTimeMs = new Date(endTime) - new Date(workflowStartTime);\nconst executionTimeMin = Math.floor(executionTimeMs / 60000);\nconst executionTimeSec = Math.floor((executionTimeMs % 60000) / 1000);\n\nconst summary = {\n  workflowName: 'Tableau Currency Daily Report',\n  date: dateStr,\n  time: timeStr,\n  endTime: endTime,\n  startTime: workflowStartTime,\n  totalCurrencies: totalCurrencies,\n  executionTime: `${executionTimeMin}m ${executionTimeSec}s`,\n  executionTimeMs: executionTimeMs,\n  status: 'completed',\n  message: `Tableau Currency Daily Report workflow completed\\nProcessed ${totalCurrencies} currencies\\nTotal time: ${executionTimeMin}m ${executionTimeSec}s\\nCompleted at: ${dateStr} ${timeStr}`\n};\n\nconsole.log(`\\n========== Tableau Workflow Execution Summary ==========`);\nconsole.log(`📊 Total Currencies: ${totalCurrencies}`);\nconsole.log(`⏱️  Execution Time: ${executionTimeMin}m ${executionTimeSec}s`);\nconsole.log(`✅ Completed At: ${dateStr} ${timeStr}`);\nconsole.log(`========================================================\\n`);\n\nreturn [{ json: summary }];"
       },
       "id": "summary-stats-node",
       "name": "Summary Statistics",
@@ -349,7 +353,7 @@
             },
             {
               "name": "blocks",
-              "value": "=[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"📊 Currency Daily Report Completed\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Status:* ✅ Completed\"},{\"type\":\"mrkdwn\",\"text\":\"*Total Currencies:* {{ $json.totalCurrencies }}\"},{\"type\":\"mrkdwn\",\"text\":\"*Date:* {{ $json.date }}\"},{\"type\":\"mrkdwn\",\"text\":\"*Time:* {{ $json.time }}\"}]},{\"type\":\"divider\"},{\"type\":\"context\",\"elements\":[{\"type\":\"mrkdwn\",\"text\":\"Workflow: Currency Daily Report\"}]}]"
+              "value": "=[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"📊 Tableau Currency Daily Report Completed\"}},{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Status:* ✅ Completed\"},{\"type\":\"mrkdwn\",\"text\":\"*Total Currencies:* {{ $json.totalCurrencies }}\"},{\"type\":\"mrkdwn\",\"text\":\"*Execution Time:* {{ $json.executionTime }}\"},{\"type\":\"mrkdwn\",\"text\":\"*Completed At:* {{ $json.date }} {{ $json.time }}\"}]},{\"type\":\"divider\"},{\"type\":\"context\",\"elements\":[{\"type\":\"mrkdwn\",\"text\":\"📌 Workflow: *Tableau Currency Daily Report* | Environment: Production\"}]}]"
             }
           ]
         },
@@ -525,14 +529,14 @@
       "main": [
         [
           {
-            "node": "Wait for 5s",
+            "node": "Wait 3s Between Uploads",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Wait for 5s": {
+    "Wait 3s Between Uploads": {
       "main": [
         [
           {
