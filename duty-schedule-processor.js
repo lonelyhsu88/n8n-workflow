@@ -162,17 +162,19 @@ const normaliseToDayEnd = (value) => {
 };
 
 // ✅ 修正：支援月份繼承格式 "10/7~12  20~27"
+// 檢查值班日期範圍是否包含「今天」（而非「本週」）
 const checkDateOverlap = (dateRangeStr, currentWeek) => {
   if (!dateRangeStr) return false;
-  console.log(`檢查日期重疊: "${dateRangeStr}" vs 週次 ${currentWeek.startStr} - ${currentWeek.endStr}`);
+  console.log(`檢查日期重疊: "${dateRangeStr}" vs 今天 ${taipeiDate.year}-${taipeiDate.month}-${taipeiDate.day}`);
 
   const dateStr = dateRangeStr.toString();
   const ranges = dateStr.split(/[\s,]+/).filter(r => r.trim());
-  const weekStart = normaliseToDayStart(currentWeek.start);
-  const weekEnd = normaliseToDayEnd(currentWeek.end);
+  // 改用「今天」而非「週範圍」
+  const todayStart = normaliseToDayStart(todayForCalc);
+  const todayEnd = normaliseToDayEnd(todayForCalc);
 
   // ✅ 新增：追蹤最後使用的月份，用於處理 "10/7~12  20~27" 這種格式
-  let lastUsedMonth = weekStart.getMonth(); // 預設使用當週的月份
+  let lastUsedMonth = todayStart.getMonth(); // 預設使用今天的月份
 
   for (const range of ranges) {
     const trimmedRange = range.trim();
@@ -235,22 +237,15 @@ const checkDateOverlap = (dateRangeStr, currentWeek) => {
           const rangeStart = normaliseToDayStart(startDate);
           const rangeEnd = normaliseToDayEnd(endDate);
 
-          // ✅ 修正：週一交班邏輯
-          const rangeEndStart = normaliseToDayStart(endDate);
-          if (rangeEndStart.getTime() === weekStart.getTime() && rangeStart.getTime() < weekStart.getTime()) {
-            console.log('⏭️ 週一交班，視為上一週範圍，不納入本週');
-            continue;
-          }
-
           console.log(`範圍檢查: ${rangeStart.toISOString().split('T')[0]} 到 ${rangeEnd.toISOString().split('T')[0]}`);
-          console.log(`當週範圍: ${weekStart.toISOString().split('T')[0]} 到 ${weekEnd.toISOString().split('T')[0]}`);
+          console.log(`今天: ${todayStart.toISOString().split('T')[0]}`);
 
-          // ✅ 修正：使用範圍重疊判斷，不再檢查月份
-          if (rangeStart.getTime() <= weekEnd.getTime() && rangeEnd.getTime() >= weekStart.getTime()) {
-            console.log('✅ 日期重疊!');
+          // 使用範圍包含判斷：只要值班期間包含今天就算匹配
+          if (rangeStart.getTime() <= todayEnd.getTime() && rangeEnd.getTime() >= todayStart.getTime()) {
+            console.log('✅ 今天在值班期間內!');
             return true;
           } else {
-            console.log('❌ 無重疊: 值班期間不在當週範圍內');
+            console.log('❌ 今天不在值班期間內');
           }
         }
       }
@@ -276,11 +271,11 @@ const checkDateOverlap = (dateRangeStr, currentWeek) => {
         const singleDayEnd = normaliseToDayEnd(singleDate);
         console.log(`單日檢查: ${singleDayStart.toISOString().split('T')[0]}`);
 
-        if (singleDayStart.getTime() <= weekEnd.getTime() && singleDayEnd.getTime() >= weekStart.getTime()) {
-          console.log('✅ 單日匹配!');
+        if (singleDayStart.getTime() <= todayEnd.getTime() && singleDayEnd.getTime() >= todayStart.getTime()) {
+          console.log('✅ 單日匹配今天!');
           return true;
         } else {
-          console.log('❌ 單日不匹配: 不在範圍內');
+          console.log('❌ 單日不是今天');
         }
       }
     }
