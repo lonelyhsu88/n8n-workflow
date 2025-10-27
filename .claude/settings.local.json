@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(node test-date-parser.js:*)",
+      "Bash(node test-real-scenario.js:*)",
+      "Bash(node -e:*)",
+      "Bash(node test-fixed-logic.js:*)",
+      "Bash(node test-november-data.js:*)",
+      "Bash(node test-oil-price-parsing.js:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
