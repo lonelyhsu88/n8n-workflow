@@ -527,7 +527,7 @@
             {
               "id": "change_detection_or_new_message",
               "leftValue": "={{ $json.shouldSendNewMessage }}",
-              "rightValue": "true",
+              "rightValue": "={{ true }}",
               "operator": {
                 "type": "boolean",
                 "operation": "equals"
