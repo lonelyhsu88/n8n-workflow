@@ -1,4 +1,5 @@
 {
+  "name": "出勤統計分析-優化完整版-簡化版",
   "nodes": [
     {
       "parameters": {
@@ -10,57 +11,56 @@
           ]
         }
       },
-      "id": "804afbe4-cdf1-4fb3-9c7e-c76d1afa1fda",
+      "id": "2d5a4c13-eece-48e6-9597-86083e23a9ce",
       "name": "每小時執行1",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
       "position": [
-        -1872,
-        240
+        -992,
+        352
       ]
     },
     {
       "parameters": {
-        "jsCode": "// ========================================\n// 完整的出缺勤解析程式碼 - 修正版\n// 支援日期與假別一對一對應、排除週末\n// 特別處理 \"9/8 bread remote\" 格式\n// ========================================\n\nconst messages = $input.all();\nconst attendanceData = [];\nconst taipeiTimeZone = 'Asia/Taipei';\nconst today = new Date();\nconst todayTaipei = new Date(toda06MH0UMZGW\": \"QA-Millie\",\n  \"U0816827JR3\": \"Design-Sendai\",\n  \"U07A8G83R2S\": \"Design-Jill Su\",\n  \"U05CW44GTCP\": \"RD-K7\",\n  \"U080U19HFV5\": \"DevOps-Ollie\",\n  \"U08AZSVBHFZ\": \"PM-Rjin\",\n  \"U08HJ1F8YAK\": \"PM-Mark\",\n  \"U07FJ5E4WF6\": \"RD-Dean\",\n  \"U02R8STEK8D\": \"RD-Ziv\",\n  \"U08C9QZUVSL\": \"Finance-Vicky\",\n  \"U05F85X2S67\": \"RD-Hannah\",\n  \"U08BLQ5V2CB\": \"QA-Kevin Chang\",\n  \"U08KL8ASPEU\": \"RD-Jeff Lee\",\n  \"U07KG73JCDQ\": \"PM-Luann\",\n  \"U07FFHDSRQT\": \"RD-Owen\",\n  \"U07QMF4269H\": \"QA-Shelby\",\n  \"U80KYE8LU\":   \"IT Director-BroHand\",\n  \"U08C2PS0D5M\": \"Design-Vera\",\n  \"U07KG7E59EW\": \"PM-Corrine\",\n  \"U07JU0N3PJS\": \"RD-Joe\",\n  \"U08BJ6Q6XM3\": \"RD-Kathy\",\n  \"U078F6EJWMA\": \"Finance-Victorya\",\n  \"UL329CFKQ\":   \"RD-Ohm\",\n  \"U07F06X4C1Z\": \"Design-Kenny\",\n  \"U07F9203EP8\": \"DevOps-Lonely\",\n  \"U07SQFQNC1H\": \"PM-Yihsiu\",\n  \"U08MNGPS63A\": \"RD-Adam Lee\",\n  \"U0591NH34G6\": \"RD-Hector\",\n  \"U04JYL4TYQ7\": \"RD-Luke Dai\",\n  \"U05F2KCDW14\": \"Finance-Dabby\",\n  \"U05F2KKNR6J\": \"Finance-Julia\",\n  \"U09D0VBDSJG\": \"food.kuo\",\n  \"U085KPCTYPM\": \"RD-Andie\",\n  \"U07A8J3L71C\": \"OP-Henry\",\n  \"U06PYV3G066\": \"RD-Ennis\",\n  \"U07FJ5E6XAQ\": \"RD-Henry Ye\",\n  \"U07QJPJ6N4V\": \"RD-Kevin Hsu\",\n  \"U07UH4MU7BN\": \"QA-Phoebus\",\n  \"U06NR2K81T7\": \"Design-Kappa\",\n  \"U06QMNU640Y\": \"PM-Iris\",\n  \"U078F4F0BKN\": \"QA-Emma\",\n  \"U07FFHE0B9R\": \"RD-Adam Lu\",\n  \"U07FJ5E7SJ0\": \"OP-James\",\n  \"U07F2TQ9TRS\": \"RD-Rick Hsieh\",\n  \"U03L2C72FKR\": \"AM-Joy\",\n  \"U05F1LC6JQN\": \"RD-Jean\",\n  \"U04P80EM4JD\": \"RD-Conray\",\n  \"U08TVT3QPGD\": \"RD-Winston\",\n  \"U082RGRGA5D\": \"Design-Eve\",\n  \"U07F9202N3Y\": \"RD-Bread\",\n  \"U08H2HD4LF7\": \"DevOps-ZhiXuan\",\n  \"U07F14AQ5ST\": \"QA-Lisa\",\n  \"U07F14AS00P\": \"Design-Didi\",\n  \"U063G3YC64X\": \"RD-Ting\",\n  \"U05FBNC3ES0\": \"DS88-AE-Nick\",\n  \"USLACKBOT\":   \"Slackbot\",\n  \"U05F2M9254N\": \"PDM-Luke Tsai\",\n  \"U08B820DB0E\": \"PM-Sitara\",\n  \"U095BDAJ47K\": \"RD-Errol\",\n  \"U07FFLJJ2H0\": \"RD-David Kuo\",\n  \"UB3B2R05P\":   \"HEAD of IT-Jack\",\n  \"U07FJ5E3NSG\": \"RD-Phoebe\",\n  \"U05EYM9KBST\": \"Design-Fred\",\n  \"U05TW44AT5Z\": \"RD-Henry Huang\",\n  \"U01T34WB28Y\": \"OP-Louis\",\n  \"U08BD80E36K\": \"RD-Greg\",\n  \"U065AM8MKRT\": \"RD-York\",\n  \"U07KDB2SZM3\": \"PM-Jeff Su\",\n  \"U071J5VGEBX\": \"Audit-Aaron\",\n  \"U048K0US9NW\": \"OP-Allen\",\n  \"U08SQ7B1HH9\": \"Audit-Nancy\",\n  \"U05G9MM0SRE\": \"Audit-Mike Chen\",\n  \"U05FBSX6GBE\": \"Audit-Cindy\",\n  \"U07BCQELYSX\": \"Finance-Judy\",\n  \"U06TKLPF8NM\": \"OP-Hao\",\n  \"U06N2ADU797\": \"QA-Jill\",\n  \"U05ETQUBJUF\": \"GM-Mish\",\n  \"U8154CHAN\":   \"JVD-Ping\",\n  \"U050QQTK8TB\": \"JVD-AM-Gabriel\",\n  \"U06JWRZ8LDR\": \"BA-Yennie\",\n  \"U08FTHXDS74\": \"PM-Monta\",\n  \"U06MS8LD220\": \"QA-Luke Chang\",\n  \"U060TCJ7VV5\": \"RD-Kent\",\n  \"U0733C2EJ9G\": \"RD-Wilson\",\n  \"U05F99NDMEW\": \"RD-Hank\",\n  \"U037EJTEWUR\": \"RD-Edgar\",\n  \"U01M9LP05BN\": \"RD-Kevin Zhao\",\n  \"U0850UQB422\": \"Design-Ero\",\n  \"U05MPQ6T65A\": \"RD-Phil\",\n  \"U05FMTYPWHX\": \"QA-Han\",\n  \"U0818HD693M\": \"QA-Lily\",\n  \"U04JCNZPVSA\": \"RD-Ricky\",\n  \"U06U0TXTTP1\": \"RD-Joey\",\n  \"U08BSUQGM97\": \"RD-Ian\",\n  \"U08362N5X2P\": \"RD-Kellen\",\n  \"U08FW3QRH2Q\": \"Audit-King Chen\",\n  \"U05F95VUGHZ\": \"Finance-Sam\",\n  \"U0758F82ZN1\": \"PM-William\",\n  \"U07F14AR29M\": \"RD-Ken Yeh\",\n  \"U066U9DKBGS\": \"RD-Alex\",\n  \"U06SSFVRAQ7\": \"RD-K11\",\n  \"U07KTJFBAN6\": \"PM-Wells\",\n  \"U06ETLL1X7X\": \"AE-Judy\",\n  \"U05F97ZMLEP\": \"DS88-AM-Victor\",\n  \"U025C3UBDP1\": \"RD-Kevin Wang\",\n  \"U05L0T4K9KK\": \"RD-Janet\",\n  \"U05FC6WUUDA\": \"OP-David Ling\",\n  \"U04744BB5GS\": \"OP-Kevin Hu\",\n  \"U0846N9SEGJ\": \"Design-Ora\",\n  \"U05F2M2R9U6\": \"HR-Freda\",\n  \"U8ECWKV7V\":   \"PE-Spencer\",\n  \"U05KKAEDGMT\": \"RD-Rick Lee\",\n  \"U05GM2TPF5Y\": \"JVD-特助-Maggie\",\n  \"U07FFHDTPFD\": \"HR-Momo\",\n  \"U07GG32LGRY\": \"RD-VincentLin\",\n  \"U05KNSF3USF\": \"PM-Bruce\",\n  \"U06KEK1RDPV\": \"PM-Phoebe\",\n  \"U07FJ5E5XL4\": \"PM-Harry\",\n  \"U07FCPQ3BEZ\": \"Design-Shu\",\n  \"U07F65P3TFD\": \"QA-Thomas\",\n  \"U07FFLJGYAW\": \"Design-Tommy\",\n  \"U0726D4HD3K\": \"Audit-Hook\",\n  \"U07G4EJQ0QG\": \"RD-Aki\",\n  \"U05FG0ZD268\": \"HR-Yura\",\n  \"U02RSBFSND8\": \"RD-Vincent\",\n  \"U06N2EL13SM\": \"RD-Tim Chao\",\n  \"U07F16QT23H\": \"AE-Paul\",\n  \"U07AF3WDBD1\": \"PM-Angelina\",\n  \"U05GZAHLCHX\": \"Gemini-AM-Aria\",\n  \"U07F052R9U3\": \"RD-Iris Lu\",\n  \"U03GL698Y5T\": \"JVD-AE-Jeff\",\n  \"U05J9LQNA2Z\": \"Head of Pymt-Ena\",\n  \"U05KJJ37B9S\": \"Finance-AWA\",\n  \"U0756PHUDPD\": \"PM-Mai\",\n  \"U04E2R04TJ6\": \"HR-Momo\",\n  \"U071M5X0Q4S\": \"HR-Chiachen\",\n  \"U06KKM456QY\": \"AE-Jordan\",\n  \"U07651RGRL5\": \"Android-Jason\",\n  \"U0760J0TR4N\": \"Admin-Ailee\",\n  \"U03LV05L5EV\": \"Head of BD-Rory\",\n  \"U05L0V06ABT\": \"PM-Harry\",\n  \"U05JNFHJW12\": \"Pymt-Vivian\",\n  \"U05UK8WU1CY\": \"Gemini-MKAM-Allan\",\n  \"U06MH1LAD38\": \"DS88-AE-Jasper\",\n  \"U05UH3KHU0N\": \"AE-Sadie\",\n  \"U01H4KULB0F\": \"PM-Andrew\",\n  \"U05F1KW56Q6\": \"DevOps-Randy\",\n  \"U05QTMD290A\": \"AE-Una\",\n  \"U066THLFWLE\": \"Admin-Ariel\",\n  \"U06D6BXH4F4\": \"HR-Julia\",\n  \"U059PNW4WNQ\": \"RD-Edmond\",\n  \"U05F99KF5GS\": \"HR-Erin\",\n  \"U063MD7SDK7\": \"RD-Reid\",\n  \"U05DUU5GMLZ\": \"OP-Leo Chen\",\n  \"U03V8GXMQLX\": \"JVD-CS-Henry\",\n  \"U05H941SLCX\": \"Zapier\",\n  \"U05FGJTNASG\": \"JVD-特助-Stephanie\",\n  \"U06R3B4EPKL\": \"Audit-Hook\",\n  \"U0617S868KD\": \"GameCS-Steven\",\n  \"U060Z6X4TMX\": \"GameCS-Marz\",\n  \"U068EJYAP0S\": \"GameCS-Shiro\",\n  \"U060GURHSHW\": \"GameCS-Karry\",\n  \"U06232M8PSS\": \"GameCS-Kevin\",\n  \"U062NATPJRF\": \"GameCS-Annber\",\n  \"U06CW2DUWDS\": \"GameCS-Orton\",\n  \"U06MPFZ07DG\": \"GameCS-Juice\",\n  \"U06TS6PQVFB\": \"GameCS-Justin\",\n  \"U06S2DJCJF7\": \"GameCS-Una\",\n  \"U06SJ0P9ZBK\": \"GameCS-Jasy\",\n  \"U06S7RLNY5S\": \"GameCS-Wolf\",\n  \"U05MU2NCC06\": \"FBPay-Clay\",\n  \"U09A5CXPHT3\": \"QA-Carol\"\n};\n\n// 名稱別名對照表（處理 bread -> RD-Bread 這種情況）\nconst nameAliases = {\n  \"bread\": \"RD-Bread\",\n  \"mark\": \"PM-Mark\",\n  \"mike\": \"Math-Mike Tsai\",\n  // 可以根據需要添加更多別名\n};\n\n// 定義狀態關鍵字\nconst statusKeywords = {\n  'remote': '遠端工作',\n  'wfh': '在家工作',\n  'work from home': '在家工作',\n  '請假': '請假',\n  '病假': '病假',\n  '事假': '事假',\n  '特休': '特休',\n  '年假': '年假',\n  '生日假': '生日假',\n  'birthday': '生日假',\n  'bd假': '生日假',\n  'bd': '生日假',\n  '出差': '出差',\n  '公出': '公出',\n  '半天': '請假半天',\n  '上午請假': '上午請假',\n  '下午請假': '下午請假',\n  '早退': '早退',\n  '遲到': '遲到',\n  '外出': '外出',\n  '健檢': '健檢',\n  '婚假': '婚假',\n  '喪假': '喪假',\n  '產假': '產假',\n  '陪產假': '陪產假',\n  '育嬰假': '育嬰假',\n  '家庭照顧假': '家庭照顧假',\n  '公假': '公假',\n  '補休': '補休',\n  '調休': '調休',\n  '生理假': '生理假'\n};\n\n// 自動建立的使用者對照表\nconst autoUserMapping = {};\nconst unknownUsers = new Set();\n\n// 掃描所有訊息，建立使用者對照表\nfor (const item of messages) {\n  const message = item.json;\n  \n  if (message.user && message.user_profile) {\n    const userId = message.user;\n    const profile = message.user_profile;\n    const userName = profile.real_name || profile.display_name || profile.name || userId;\n    \n    if (userName && userName !== userId) {\n      autoUserMapping[userId] = userName;\n    }\n  }\n}\n\n// 合併手動和自動的對照表\nconst finalUserMapping = { ...autoUserMapping, ...userMapping };\n\n// 取得使用者顯示名稱\nfunction getUserDisplayName(userId) {\n  if (userMapping[userId]) {\n    return userMapping[userId];\n  }\n  if (autoUserMapping[userId]) {\n    return autoUserMapping[userId];\n  }\n  return userId;\n}\n\n// 替換訊息中的使用者 ID 為實際姓名\nfunction replaceUserIdsWithNames(text) {\n  let replacedText = text;\n  // 處理 <@UserID> 格式\n  const userIdPattern = /<@([A-Z0-9]+)>/g;\n  replacedText = replacedText.replace(userIdPattern, (match, userId) => {\n    const userName = getUserDisplayName(userId);\n    return `@${userName}`;\n  });\n  // 處理 <@PM-Mark> 格式（已經是名稱）\n  const namePattern = /<@([^>]+)>/g;\n  replacedText = replacedText.replace(namePattern, (match, name) => {\n    // 如果不是 User ID 格式，直接返回名稱\n    if (!/^U[A-Z0-9]+$/.test(name)) {\n      return `@${name}`;\n    }\n    return match;\n  });\n  return replacedText;\n}\n\n// 解析訊息狀態\nfunction parseMessageStatus(messageText) {\n  // 移除括號內容如（主管已同意）\n  let cleanText = messageText.replace(/[（(][^）)]*[）)]/g, '').trim();\n  const textLower = cleanText.toLowerCase();\n  \n  // 檢查關鍵字 - 使用單字邊界匹配防止誤判\n  for (const [keyword, statusName] of Object.entries(statusKeywords)) {\n    // 對於短關鍵字（如 bd、wfh），使用單字邊界匹配\n    if (keyword.length <= 3) {\n      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\\\\]\\\\]/g, '\\\\\\\\$&');\n      const regexPattern = '\\\\\\\\b' + escapedKeyword + '\\\\\\\\b';\n      const regex = new RegExp(regexPattern, 'i');\n      if (regex.test(cleanText)) {\n        return statusName;\n      }\n    } else {\n      // 長關鍵字使用原本的包含匹配\n      if (textLower.includes(keyword)) {\n        return statusName;\n      }\n    }\n  }\n  \n  return '正常上班';\n}\n\n// 從訊息文字中提取實際請假的使用者（修正版 - 支援 \"9/8 bread remote\" 格式）\nfunction extractActualUser(messageText) {\n  // === 新增：檢查特殊格式 \"日期 名稱 狀態\" ===\n  // 例如: \"9/8 bread remote\", \"9/5 mark 請假\"\n  const specialPattern = /^\\d{1,2}\\/\\d{1,2}\\s+([a-zA-Z]+)\\s+/i;\n  const specialMatch = messageText.match(specialPattern);\n  \n  if (specialMatch) {\n    const nameFound = specialMatch[1].toLowerCase();\n    \n    // 檢查是否為已知的別名\n    if (nameAliases[nameFound]) {\n      return { userId: null, userName: nameAliases[nameFound] };\n    }\n    \n    // 嘗試在 userMapping 中尋找匹配的名稱\n    for (const [userId, fullName] of Object.entries(finalUserMapping)) {\n      if (fullName.toLowerCase().includes(nameFound)) {\n        return { userId: userId, userName: fullName };\n      }\n    }\n    \n    // 如果都找不到，將第一個字母大寫後返回\n    const capitalizedName = nameFound.charAt(0).toUpperCase() + nameFound.slice(1);\n    return { userId: null, userName: capitalizedName };\n  }\n  \n  // === 原有的模式處理 ===\n  // 模式1: <@UserID> 格式（User ID）\n  const pattern1 = /<@(U[A-Z0-9]+)>/;\n  const match1 = messageText.match(pattern1);\n  \n  if (match1) {\n    const userId = match1[1];\n    return { userId: userId, userName: getUserDisplayName(userId) };\n  }\n  \n  // 模式2: <@使用者名稱> 格式（如 <@PM-Mark>）\n  const pattern2 = /<@([^>]+)>/;\n  const match2 = messageText.match(pattern2);\n  \n  if (match2) {\n    const name = match2[1];\n    // 如果不是 User ID 格式，則當作使用者名稱\n    if (!/^U[A-Z0-9]+$/.test(name)) {\n      return { userId: null, userName: name };\n    }\n  }\n  \n  // 模式3: @使用者名稱 格式（不帶尖括號）\n  const pattern3 = /@([^\\s>]+)/;\n  const match3 = messageText.match(pattern3);\n  \n  if (match3) {\n    const name = match3[1];\n    return { userId: null, userName: name };\n  }\n  \n  return null;\n}\n\n// 解析日期與假別一對一對應的格式\n// 例如: \"9/1、9/2 @Math-Mike Tsai 生日假＆特休\" → 9/1生日假, 9/2特休\nfunction parseDateLeaveMapping(messageText, messageTimestamp) {\n  const currentYear = new Date().getFullYear();\n  const results = [];\n  \n  // 先檢查是否為日期範圍格式（不應該用這個函數處理）\n  if (messageText.match(/\\d{1,2}\\/\\d{1,2}\\s*[~～\\-]\\s*\\d{1,2}\\/\\d{1,2}/)) {\n    return []; // 日期範圍應該由 extractLeaveDates 處理\n  }\n  \n  // 檢查是否有頓號分隔的多個日期\n  if (!messageText.includes('、')) {\n    return []; // 沒有頓號，不是一對一對應格式\n  }\n  \n  // 提取使用者\n  const userInfo = extractActualUser(messageText);\n  const userName = userInfo ? userInfo.userName : 'Unknown';\n  \n  // 移除使用者標記，準備解析\n  let cleanText = messageText.replace(/<@[^>]+>/g, '').replace(/@[^\\s]+/, '').trim();\n  \n  // 模式: \"9/1、9/2 生日假＆特休\"（必須有頓號和多種假別）\n  const pattern = /^([\\d\\/\\s、，,]+)\\s+(.+)$/;\n  const match = cleanText.match(pattern);\n  \n  if (match) {\n    const datesPart = match[1];\n    const leavesPart = match[2];\n    \n    // 檢查是否有多種假別（用 & 或 ＆ 分隔）\n    const hasMultipleLeaves = leavesPart.includes('&') || leavesPart.includes('＆');\n    \n    if (!hasMultipleLeaves) {\n      return []; // 只有一種假別，不需要一對一對應\n    }\n    \n    // 解析日期列表\n    const dates = [];\n    const datePattern = /\\d{1,2}\\/\\d{1,2}/g;\n    const dateMatches = datesPart.match(datePattern);\n    \n    if (dateMatches) {\n      for (const dateStr of dateMatches) {\n        const [month, day] = dateStr.split('/').map(Number);\n        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {\n          const leaveDate = new Date(currentYear, month - 1, day);\n          \n          // 檢查是否為週末\n          const dayOfWeek = leaveDate.getDay();\n          if (dayOfWeek === 0 || dayOfWeek === 6) {\n            continue; // 跳過週末\n          }\n          \n          // 調整年份 - 改進邏輯\n          const messageDate = new Date(messageTimestamp);\n          const daysDiff = (messageDate - leaveDate) / (1000 * 60 * 60 * 24);\n          \n          if (daysDiff > 0 && daysDiff < 60 && messageDate.getMonth() > month - 1) {\n            leaveDate.setFullYear(currentYear - 1);\n          } else if (daysDiff > 180) {\n            leaveDate.setFullYear(currentYear + 1);\n          } else if (daysDiff < -180) {\n            leaveDate.setFullYear(currentYear - 1);\n          }\n          \n          dates.push({\n            date: leaveDate,\n            dateStr: leaveDate.toLocaleDateString('zh-TW', {\n              timeZone: taipeiTimeZone,\n              year: 'numeric',\n              month: '2-digit',\n              day: '2-digit'\n            })\n          });\n        }\n      }\n    }\n    \n    // 解析假別列表（移除括號內容）\n    let cleanLeaves = leavesPart.replace(/[（(][^）)]*[）)]/g, '').trim();\n    const leaves = [];\n    const separators = ['&', '＆'];\n    let leaveParts = [cleanLeaves];\n    \n    for (const separator of separators) {\n      if (cleanLeaves.includes(separator)) {\n        leaveParts = cleanLeaves.split(separator).map(p => p.trim()).filter(p => p);\n        break;\n      }\n    }\n    \n    // 識別每個假別\n    for (const part of leaveParts) {\n      const partLower = part.toLowerCase();\n      let matchedStatus = null;\n      \n      for (const [keyword, statusName] of Object.entries(statusKeywords)) {\n        if (partLower.includes(keyword.toLowerCase())) {\n          matchedStatus = statusName;\n          break;\n        }\n      }\n      \n      leaves.push(matchedStatus || part);\n    }\n    \n    // 建立日期與假別的對應關係\n    if (dates.length === leaves.length && dates.length > 1) {\n      // 完美對應：每個日期對應一個假別\n      for (let i = 0; i < dates.length; i++) {\n        results.push({\n          date: dates[i].dateStr,\n          status: leaves[i],\n          userName: userName\n        });\n      }\n      return results;\n    }\n  }\n  \n  return [];\n}\n\n// 從訊息詳情中解析實際請假日期（支援日期範圍，排除週末）\nfunction extractLeaveDates(messageText, messageTimestamp) {\n  const currentYear = new Date().getFullYear();\n  const results = [];\n  \n  // 檢查日期範圍格式 (如: 9/1 ~ 9/5, 9/1-9/5, 8/13~8/21)\n  const rangePatterns = [\n    /(\\d{1,2})\\/(\\d{1,2})\\s*[~～\\-]\\s*(\\d{1,2})\\/(\\d{1,2})/,  // 完整格式\n    /(\\d{1,2})\\/(\\d{1,2})\\s*[~～\\-]\\s*(\\d{1,2})(?!\\/)/,       // 簡寫格式\n  ];\n  \n  for (const pattern of rangePatterns) {\n    const match = messageText.match(pattern);\n    if (match) {\n      let startMonth, startDay, endMonth, endDay;\n      \n      if (match.length === 5) {\n        startMonth = parseInt(match[1]);\n        startDay = parseInt(match[2]);\n        endMonth = parseInt(match[3]);\n        endDay = parseInt(match[4]);\n      } else if (match.length === 4) {\n        startMonth = parseInt(match[1]);\n        startDay = parseInt(match[2]);\n        endMonth = startMonth;\n        endDay = parseInt(match[3]);\n      }\n      \n      if (startMonth >= 1 && startMonth <= 12 && startDay >= 1 && startDay <= 31 &&\n          endMonth >= 1 && endMonth <= 12 && endDay >= 1 && endDay <= 31) {\n        \n        const startDate = new Date(currentYear, startMonth - 1, startDay);\n        const endDate = new Date(currentYear, endMonth - 1, endDay);\n        \n        // 處理跨年\n        if (endDate < startDate) {\n          endDate.setFullYear(currentYear + 1);\n        }\n        \n        // 調整年份 - 改進邏輯：考慮訊息發送時間與請假日期的關係\n        const messageDate = new Date(messageTimestamp);\n        const daysDiff = (messageDate - startDate) / (1000 * 60 * 60 * 24);\n        \n        // 如果日期在未來（例如訊息在 10 月提到 9 月的日期），判定為去年\n        if (daysDiff > 0 && daysDiff < 60 && messageDate.getMonth() > startMonth - 1) {\n          // 訊息發送月份晚於請假月份，且差距小於 60 天，判定為去年\n          startDate.setFullYear(currentYear - 1);\n          endDate.setFullYear(currentYear - 1);\n        } else if (daysDiff > 180) {\n          startDate.setFullYear(currentYear + 1);\n          endDate.setFullYear(currentYear + 1);\n        } else if (daysDiff < -180) {\n          startDate.setFullYear(currentYear - 1);\n          endDate.setFullYear(currentYear - 1);\n        }\n        \n        // 產生日期範圍內的所有日期（排除週末）\n        const currentDate = new Date(startDate);\n        while (currentDate <= endDate) {\n          const dayOfWeek = currentDate.getDay();\n          // 0 是週日，6 是週六，排除這兩天\n          if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n            results.push({\n              date: currentDate.toLocaleDateString('zh-TW', {\n                timeZone: taipeiTimeZone,\n                year: 'numeric',\n                month: '2-digit',\n                day: '2-digit'\n              }),\n              status: null\n            });\n          }\n          currentDate.setDate(currentDate.getDate() + 1);\n        }\n        \n        return results;\n      }\n    }\n  }\n  \n  // 檢查單一日期\n  const singlePatterns = [\n    /(\\d{1,2})\\/(\\d{1,2})/,\n    /(\\d{1,2})月(\\d{1,2})日?/,\n  ];\n  \n  for (const pattern of singlePatterns) {\n    const match = messageText.match(pattern);\n    if (match) {\n      const month = parseInt(match[1]);\n      const day = parseInt(match[2]);\n      \n      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {\n        const leaveDate = new Date(currentYear, month - 1, day);\n        \n        // 檢查是否為週末\n        const dayOfWeek = leaveDate.getDay();\n        if (dayOfWeek === 0 || dayOfWeek === 6) {\n          // 如果是週末，跳過不記錄\n          console.log(`跳過週末: ${month}/${day}`);\n          return results;\n        }\n        \n        const messageDate = new Date(messageTimestamp);\n        const daysDiff = (messageDate - leaveDate) / (1000 * 60 * 60 * 24);\n        if (daysDiff > 180) {\n          leaveDate.setFullYear(currentYear + 1);\n        } else if (daysDiff < -180) {\n          leaveDate.setFullYear(currentYear - 1);\n        }\n        \n        results.push({\n          date: leaveDate.toLocaleDateString('zh-TW', {\n            timeZone: taipeiTimeZone,\n            year: 'numeric',\n            month: '2-digit',\n            day: '2-digit'\n          }),\n          status: null\n        });\n        return results;\n      }\n    }\n  }\n  \n  // 如果找不到日期，返回訊息發送日期（但檢查是否為週末）\n  const defaultDate = new Date(messageTimestamp);\n  const dayOfWeek = defaultDate.getDay();\n  \n  if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n    results.push({\n      date: defaultDate.toLocaleDateString('zh-TW', {\n        timeZone: taipeiTimeZone,\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit'\n      }),\n      status: null\n    });\n  }\n  \n  return results;\n}\n\n// === 主要處理邏輯 ===\nfor (const item of messages) {\n  const message = item.json;\n  if (!message.text) continue;\n  \n  // 過濾系統訊息（加入/離開頻道等）\n  const systemMessagePatterns = [\n    /已加入頻道/,\n    /已離開頻道/,\n    /加入了 #/,\n    /set the channel/,\n    /renamed the channel/,\n    /uploaded a file/,\n    /^slackbot$/i\n  ];\n  \n  const isSystemMessage = systemMessagePatterns.some(pattern => \n    pattern.test(message.text)\n  );\n  \n  if (isSystemMessage) {\n    continue; // 跳過系統訊息\n  }\n  \n  const messageTimestamp = parseFloat(message.ts) * 1000;\n  const messageTime = new Date(messageTimestamp);\n  \n  // 先嘗試解析日期與假別一對一對應的格式\n  const mappingResults = parseDateLeaveMapping(message.text, messageTimestamp);\n  \n  if (mappingResults.length > 0) {\n    // 使用對應格式的解析結果\n    const timeStr = messageTime.toLocaleTimeString('zh-TW', { \n      timeZone: taipeiTimeZone,\n      hour: '2-digit', \n      minute: '2-digit',\n      hour12: false\n    });\n    \n    for (const result of mappingResults) {\n      attendanceData.push({\n        date: result.date,\n        messageDate: messageTime.toLocaleDateString('zh-TW', { \n          timeZone: taipeiTimeZone,\n          year: 'numeric',\n          month: '2-digit',\n          day: '2-digit'\n        }),\n        time: timeStr,\n        userName: result.userName,\n        userId: null,\n        status: result.status,\n        details: replaceUserIdsWithNames(message.text)\n      });\n    }\n  } else {\n    // 原本的處理邏輯\n    const userInfo = extractActualUser(message.text);\n    if (!userInfo) continue;\n    \n    let userName = userInfo.userName || 'Unknown';\n    \n    // 解析請假日期（可能是範圍）\n    const actualLeaveDates = extractLeaveDates(message.text, messageTimestamp);\n    \n    // 解析請假狀態\n    const status = parseMessageStatus(message.text);\n    \n    const timeStr = messageTime.toLocaleTimeString('zh-TW', { \n      timeZone: taipeiTimeZone,\n      hour: '2-digit', \n      minute: '2-digit',\n      hour12: false\n    });\n    \n    // 為每個日期建立記錄\n    for (const leaveInfo of actualLeaveDates) {\n      attendanceData.push({\n        date: leaveInfo.date,\n        messageDate: messageTime.toLocaleDateString('zh-TW', { \n          timeZone: taipeiTimeZone,\n          year: 'numeric',\n          month: '2-digit',\n          day: '2-digit'\n        }),\n        time: timeStr,\n        userName: userName,\n        userId: userInfo.userId || null,\n        status: status,\n        details: replaceUserIdsWithNames(message.text)\n      });\n    }\n  }\n}\n\n// 按日期和使用者分組統計\nconst userStats = {};\nfor (const record of attendanceData) {\n  const key = `${record.userName}_${record.date}`;\n  if (!userStats[key]) {\n    userStats[key] = {\n      userName: record.userName,\n      userId: record.userId,\n      date: record.date,\n      messageDate: record.messageDate,\n      firstCheckIn: record.time,\n      lastCheckOut: record.time,\n      status: record.status,\n      details: record.details,\n      messageCount: 1\n    };\n  } else {\n    userStats[key].lastCheckOut = record.time;\n    userStats[key].messageCount++;\n    if (record.status !== '正常上班') {\n      userStats[key].status = record.status;\n      userStats[key].details = record.details;\n    }\n  }\n}\n\n// 整理最終結果\nconst finalResults = Object.values(userStats).map(stat => {\n  let workDuration = '';\n  if (stat.firstCheckIn !== stat.lastCheckOut) {\n    const [startHour, startMin] = stat.firstCheckIn.split(':').map(Number);\n    const [endHour, endMin] = stat.lastCheckOut.split(':').map(Number);\n    const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);\n    if (durationMinutes > 0) {\n      const hours = Math.floor(durationMinutes / 60);\n      const minutes = durationMinutes % 60;\n      workDuration = `${hours}小時${minutes}分鐘`;\n    }\n  }\n  \n  return {\n    ...stat,\n    workDuration: workDuration\n  };\n});\n\n// 排序\nfinalResults.sort((a, b) => {\n  const dateCompare = b.date.localeCompare(a.date);\n  if (dateCompare !== 0) return dateCompare;\n  return a.userName.localeCompare(b.userName, 'zh-TW');\n});\n\n// 統計摘要\nconst summary = {\n  totalRecords: finalResults.length,\n  uniqueUsers: [...new Set(finalResults.map(r => r.userName))].length,\n  dateRange: {\n    from: finalResults.length > 0 ? finalResults[finalResults.length - 1].date : '',\n    to: finalResults.length > 0 ? finalResults[0].date : ''\n  },\n  statusBreakdown: {}\n};\n\n// 統計各種狀態\nfinalResults.forEach(record => {\n  const status = record.status;\n  summary.statusBreakdown[status] = (summary.statusBreakdown[status] || 0) + 1;\n});\n\n// 除錯資訊\nconsole.log(\"=== 處理完成 ===\");\nconsole.log(\"總記錄數：\", finalResults.length);\nconsole.log(\"狀態統計：\", summary.statusBreakdown);\n\n// 檢查 RD-Bread 9月記錄\nconst breadSeptRecords = finalResults.filter(r => \n  r.userName === 'RD-Bread' && \n  r.date && r.date.includes('/09/')\n);\nconsole.log(`\\nRD-Bread 9月請假天數: ${breadSeptRecords.length}`);\nif (breadSeptRecords.length > 0) {\n  console.log(\"RD-Bread 9月請假日期:\");\n  breadSeptRecords.forEach(r => {\n    console.log(`  ${r.date}: ${r.status}`);\n  });\n}\n\n// 檢查 PM-Mark 9月記錄\nconst markSeptRecords = finalResults.filter(r => \n  r.userName === 'PM-Mark' && \n  r.date && r.date.includes('/09/')\n);\nconsole.log(`\\nPM-Mark 9月請假天數: ${markSeptRecords.length}`);\nif (markSeptRecords.length > 0) {\n  console.log(\"PM-Mark 9月請假日期:\");\n  markSeptRecords.forEach(r => {\n    console.log(`  ${r.date}: ${r.status}`);\n  });\n}\n\nreturn {\n  summary: summary,\n  records: finalResults,\n  rawDataCount: attendanceData.length\n};"
+        "jsCode": "// ========================================\n// 出缺勤解析程式碼 - 修復版 (支援多日期格式)\n// 自動從 Slack 訊息中提取使用者資訊\n// 修復: 1) 日期遞增bug 2) 支援逗號分隔的多日期\n// ========================================\n\nconst messages = $input.all();\nconst attendanceData = [];\nconst taipeiTimeZone = 'Asia/Taipei';\n\n// 自動建立的使用者對照表\nconst autoUserMapping = {};\n\n// 掃描所有訊息，建立使用者對照表\nfor (const item of messages) {\n  const message = item.json;\n\n  if (message.user && message.user_profile) {\n    const userId = message.user;\n    const profile = message.user_profile;\n    const userName = profile.real_name || profile.display_name || profile.name || userId;\n\n    if (userName && userName !== userId) {\n      autoUserMapping[userId] = userName;\n    }\n  }\n}\n\n// 名稱別名對照表\nconst nameAliases = {\n  \"bread\": \"RD-Bread\",\n  \"mark\": \"PM-Mark\",\n  \"mike\": \"Math-Mike Tsai\"\n};\n\n// 定義狀態關鍵字\nconst statusKeywords = {\n  'remote': '遠端工作',\n  'wfh': '在家工作',\n  'work from home': '在家工作',\n  '請假': '請假',\n  '病假': '病假',\n  '事假': '事假',\n  '特休': '特休',\n  '年假': '年假',\n  '生日假': '生日假',\n  'birthday': '生日假',\n  'bd假': '生日假',\n  'bd': '生日假',\n  '出差': '出差',\n  '公出': '公出',\n  '半天': '請假半天',\n  '上午請假': '上午請假',\n  '下午請假': '下午請假',\n  '早退': '早退',\n  '遲到': '遲到',\n  '外出': '外出',\n  '健檢': '健檢',\n  '婚假': '婚假',\n  '喪假': '喪假',\n  '產假': '產假',\n  '陪產假': '陪產假',\n  '育嬰假': '育嬰假',\n  '家庭照顧假': '家庭照顧假',\n  '公假': '公假',\n  '補休': '補休',\n  '調休': '調休',\n  '生理假': '生理假'\n};\n\n// 取得使用者顯示名稱\nfunction getUserDisplayName(userId) {\n  return autoUserMapping[userId] || userId;\n}\n\n// 替換訊息中的使用者 ID 為實際姓名\nfunction replaceUserIdsWithNames(text) {\n  let replacedText = text;\n  const userIdPattern = /<@([A-Z0-9]+)>/g;\n  replacedText = replacedText.replace(userIdPattern, (match, userId) => {\n    const userName = getUserDisplayName(userId);\n    return `@${userName}`;\n  });\n  const namePattern = /<@([^>]+)>/g;\n  replacedText = replacedText.replace(namePattern, (match, name) => {\n    if (!/^U[A-Z0-9]+$/.test(name)) {\n      return `@${name}`;\n    }\n    return match;\n  });\n  return replacedText;\n}\n\n// 解析訊息狀態\nfunction parseMessageStatus(messageText) {\n  let cleanText = messageText.replace(/[（(][^）)]*[）)]/g, '').trim();\n  const textLower = cleanText.toLowerCase();\n\n  for (const [keyword, statusName] of Object.entries(statusKeywords)) {\n    if (keyword.length <= 3) {\n      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n      const regexPattern = '\\\\b' + escapedKeyword + '\\\\b';\n      const regex = new RegExp(regexPattern, 'i');\n      if (regex.test(cleanText)) {\n        return statusName;\n      }\n    } else {\n      if (textLower.includes(keyword)) {\n        return statusName;\n      }\n    }\n  }\n\n  return '正常上班';\n}\n\n// 從訊息文字中提取實際請假的使用者\nfunction extractActualUser(messageText) {\n  // 檢查特殊格式 \"日期 名稱 狀態\"\n  const specialPattern = /^\\d{1,2}\\/\\d{1,2}\\s+([a-zA-Z]+)\\s+/i;\n  const specialMatch = messageText.match(specialPattern);\n\n  if (specialMatch) {\n    const nameFound = specialMatch[1].toLowerCase();\n\n    if (nameAliases[nameFound]) {\n      return { userId: null, userName: nameAliases[nameFound] };\n    }\n\n    for (const [userId, fullName] of Object.entries(autoUserMapping)) {\n      if (fullName.toLowerCase().includes(nameFound)) {\n        return { userId: userId, userName: fullName };\n      }\n    }\n\n    const capitalizedName = nameFound.charAt(0).toUpperCase() + nameFound.slice(1);\n    return { userId: null, userName: capitalizedName };\n  }\n\n  // 模式1: <@UserID> 格式\n  const pattern1 = /<@(U[A-Z0-9]+)>/;\n  const match1 = messageText.match(pattern1);\n\n  if (match1) {\n    const userId = match1[1];\n    return { userId: userId, userName: getUserDisplayName(userId) };\n  }\n\n  // 模式2: <@使用者名稱> 格式\n  const pattern2 = /<@([^>]+)>/;\n  const match2 = messageText.match(pattern2);\n\n  if (match2) {\n    const name = match2[1];\n    if (!/^U[A-Z0-9]+$/.test(name)) {\n      return { userId: null, userName: name };\n    }\n  }\n\n  // 模式3: @使用者名稱 格式\n  const pattern3 = /@([^\\s>]+)/;\n  const match3 = messageText.match(pattern3);\n\n  if (match3) {\n    const name = match3[1];\n    return { userId: null, userName: name };\n  }\n\n  return null;\n}\n\n// ✅ 修復: 支援逗號分隔的多個日期/日期範圍\nfunction extractLeaveDates(messageText, messageTimestamp) {\n  const currentYear = new Date().getFullYear();\n  const results = [];\n\n  // ✅ 新增: 先處理逗號分隔的多個日期段\n  // 例如: \"10/23，27-31\" 或 \"10/23, 10/27-31\"\n  const commaParts = messageText.split(/[,，、]/);\n\n  if (commaParts.length > 1) {\n    // 有逗號分隔，分別處理每個部分\n    for (const part of commaParts) {\n      const partResults = extractSingleDateRange(part.trim(), messageTimestamp, currentYear);\n      results.push(...partResults);\n    }\n\n    if (results.length > 0) {\n      return results;\n    }\n  }\n\n  // 沒有逗號或逗號處理失敗，使用原本的邏輯\n  return extractSingleDateRange(messageText, messageTimestamp, currentYear);\n}\n\n// ✅ 新增: 提取單一日期或日期範圍的輔助函數\nfunction extractSingleDateRange(messageText, messageTimestamp, currentYear) {\n  const results = [];\n\n  // 檢查日期範圍格式\n  const rangePatterns = [\n    /(\\d{1,2})\\/(\\d{1,2})\\s*[~～\\-]\\s*(\\d{1,2})\\/(\\d{1,2})/,\n    /(\\d{1,2})\\/(\\d{1,2})\\s*[~～\\-]\\s*(\\d{1,2})(?!\\/)/,\n  ];\n\n  for (const pattern of rangePatterns) {\n    const match = messageText.match(pattern);\n    if (match) {\n      let startMonth, startDay, endMonth, endDay;\n\n      if (match.length === 5) {\n        startMonth = parseInt(match[1]);\n        startDay = parseInt(match[2]);\n        endMonth = parseInt(match[3]);\n        endDay = parseInt(match[4]);\n      } else if (match.length === 4) {\n        startMonth = parseInt(match[1]);\n        startDay = parseInt(match[2]);\n        endMonth = startMonth;\n        endDay = parseInt(match[3]);\n      }\n\n      if (startMonth >= 1 && startMonth <= 12 && startDay >= 1 && startDay <= 31 &&\n          endMonth >= 1 && endMonth <= 12 && endDay >= 1 && endDay <= 31) {\n\n        const startDate = new Date(currentYear, startMonth - 1, startDay);\n        const endDate = new Date(currentYear, endMonth - 1, endDay);\n\n        if (endDate < startDate) {\n          endDate.setFullYear(currentYear + 1);\n        }\n\n        const messageDate = new Date(messageTimestamp);\n        const daysDiff = (messageDate - startDate) / (1000 * 60 * 60 * 24);\n\n        if (daysDiff > 0 && daysDiff < 60 && messageDate.getMonth() > startMonth - 1) {\n          startDate.setFullYear(currentYear - 1);\n          endDate.setFullYear(currentYear - 1);\n        } else if (daysDiff > 180) {\n          startDate.setFullYear(currentYear + 1);\n          endDate.setFullYear(currentYear + 1);\n        } else if (daysDiff < -180) {\n          startDate.setFullYear(currentYear - 1);\n          endDate.setFullYear(currentYear - 1);\n        }\n\n        const currentDate = new Date(startDate);\n        while (currentDate <= endDate) {\n          const dayOfWeek = currentDate.getDay();\n          if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n            results.push({\n              date: currentDate.toLocaleDateString('zh-TW', {\n                timeZone: taipeiTimeZone,\n                year: 'numeric',\n                month: '2-digit',\n                day: '2-digit'\n              }),\n              status: null\n            });\n          }\n          // ✅ 修復: 正確的日期遞增\n          currentDate.setDate(currentDate.getDate() + 1);\n        }\n\n        return results;\n      }\n    }\n  }\n\n  // 檢查單一日期\n  const singlePatterns = [\n    /(\\d{1,2})\\/(\\d{1,2})/,\n    /(\\d{1,2})月(\\d{1,2})日?/,\n  ];\n\n  for (const pattern of singlePatterns) {\n    const match = messageText.match(pattern);\n    if (match) {\n      const month = parseInt(match[1]);\n      const day = parseInt(match[2]);\n\n      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {\n        const leaveDate = new Date(currentYear, month - 1, day);\n\n        const dayOfWeek = leaveDate.getDay();\n        if (dayOfWeek === 0 || dayOfWeek === 6) {\n          return results;\n        }\n\n        const messageDate = new Date(messageTimestamp);\n        const daysDiff = (messageDate - leaveDate) / (1000 * 60 * 60 * 24);\n        if (daysDiff > 180) {\n          leaveDate.setFullYear(currentYear + 1);\n        } else if (daysDiff < -180) {\n          leaveDate.setFullYear(currentYear - 1);\n        }\n\n        results.push({\n          date: leaveDate.toLocaleDateString('zh-TW', {\n            timeZone: taipeiTimeZone,\n            year: 'numeric',\n            month: '2-digit',\n            day: '2-digit'\n          }),\n          status: null\n        });\n        return results;\n      }\n    }\n  }\n\n  // 預設返回訊息發送日期\n  const defaultDate = new Date(messageTimestamp);\n  const dayOfWeek = defaultDate.getDay();\n\n  if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n    results.push({\n      date: defaultDate.toLocaleDateString('zh-TW', {\n        timeZone: taipeiTimeZone,\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit'\n      }),\n      status: null\n    });\n  }\n\n  return results;\n}\n\n// 主要處理邏輯\nfor (const item of messages) {\n  const message = item.json;\n  if (!message.text) continue;\n\n  // 過濾系統訊息\n  const systemMessagePatterns = [\n    /已加入頻道/,\n    /已離開頻道/,\n    /加入了 #/,\n    /set the channel/,\n    /renamed the channel/,\n    /uploaded a file/,\n    /^slackbot$/i\n  ];\n\n  const isSystemMessage = systemMessagePatterns.some(pattern =>\n    pattern.test(message.text)\n  );\n\n  if (isSystemMessage) {\n    continue;\n  }\n\n  const messageTimestamp = parseFloat(message.ts) * 1000;\n  const messageTime = new Date(messageTimestamp);\n\n  const userInfo = extractActualUser(message.text);\n  if (!userInfo) continue;\n\n  let userName = userInfo.userName || 'Unknown';\n  const actualLeaveDates = extractLeaveDates(message.text, messageTimestamp);\n  const status = parseMessageStatus(message.text);\n\n  const timeStr = messageTime.toLocaleTimeString('zh-TW', {\n    timeZone: taipeiTimeZone,\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false\n  });\n\n  for (const leaveInfo of actualLeaveDates) {\n    attendanceData.push({\n      date: leaveInfo.date,\n      messageDate: messageTime.toLocaleDateString('zh-TW', {\n        timeZone: taipeiTimeZone,\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit'\n      }),\n      time: timeStr,\n      userName: userName,\n      userId: userInfo.userId || null,\n      status: status,\n      details: replaceUserIdsWithNames(message.text)\n    });\n  }\n}\n\n// 按日期和使用者分組統計\nconst userStats = {};\nfor (const record of attendanceData) {\n  const key = `${record.userName}_${record.date}`;\n  if (!userStats[key]) {\n    userStats[key] = {\n      userName: record.userName,\n      userId: record.userId,\n      date: record.date,\n      messageDate: record.messageDate,\n      firstCheckIn: record.time,\n      lastCheckOut: record.time,\n      status: record.status,\n      details: record.details,\n      messageCount: 1\n    };\n  } else {\n    userStats[key].lastCheckOut = record.time;\n    userStats[key].messageCount++;\n    if (record.status !== '正常上班') {\n      userStats[key].status = record.status;\n      userStats[key].details = record.details;\n    }\n  }\n}\n\n// 整理最終結果\nconst finalResults = Object.values(userStats).map(stat => {\n  let workDuration = '';\n  if (stat.firstCheckIn !== stat.lastCheckOut) {\n    const [startHour, startMin] = stat.firstCheckIn.split(':').map(Number);\n    const [endHour, endMin] = stat.lastCheckOut.split(':').map(Number);\n    const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);\n    if (durationMinutes > 0) {\n      const hours = Math.floor(durationMinutes / 60);\n      const minutes = durationMinutes % 60;\n      workDuration = `${hours}小時${minutes}分鐘`;\n    }\n  }\n\n  return {\n    ...stat,\n    workDuration: workDuration\n  };\n});\n\n// 排序\nfinalResults.sort((a, b) => {\n  const dateCompare = b.date.localeCompare(a.date);\n  if (dateCompare !== 0) return dateCompare;\n  return a.userName.localeCompare(b.userName, 'zh-TW');\n});\n\n// 統計摘要\nconst summary = {\n  totalRecords: finalResults.length,\n  uniqueUsers: [...new Set(finalResults.map(r => r.userName))].length,\n  dateRange: {\n    from: finalResults.length > 0 ? finalResults[finalResults.length - 1].date : '',\n    to: finalResults.length > 0 ? finalResults[0].date : ''\n  },\n  statusBreakdown: {}\n};\n\nfinalResults.forEach(record => {\n  const status = record.status;\n  summary.statusBreakdown[status] = (summary.statusBreakdown[status] || 0) + 1;\n});\n\nconsole.log(\"=== 處理完成 ===\");\nconsole.log(\"總記錄數：\", finalResults.length);\nconsole.log(\"狀態統計：\", summary.statusBreakdown);\nconsole.log(\"自動識別的使用者數:\", Object.keys(autoUserMapping).length);\n\nreturn {\n  summary: summary,\n  records: finalResults,\n  rawDataCount: attendanceData.length\n};\n"
       },
-      "id": "0ce6f4fa-1b92-4a63-be64-ba00fce19c66",
+      "id": "9da538dc-117c-4a85-8944-2080140a2063",
       "name": "解析出缺勤資料",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1232,
-        240
+        -352,
+        352
       ]
     },
     {
       "parameters": {
         "jsCode": "// 取得輸入資料\nconst inputData = $input.first().json;\nconst records = inputData.records || [];\n\n// 取得今天日期（台北時區）\nconst today = new Date();\nconst todayStr = today.toLocaleDateString('zh-TW', {\n  timeZone: 'Asia/Taipei',\n  year: 'numeric',\n  month: '2-digit',\n  day: '2-digit'\n});\n\nconsole.log(\"今天日期:\", todayStr);\nconsole.log(\"總記錄數:\", records.length);\n\n// 過濾今天的請假記錄\nconst todayLeaves = records.filter(record => {\n  if (!record) return false;\n  \n  // 檢查日期\n  let recordDate = record.date;\n  if (!recordDate) return false;\n  \n  // 標準化日期格式\n  if (typeof recordDate === 'string') {\n    recordDate = recordDate.trim();\n    if (recordDate.includes('-')) {\n      recordDate = recordDate.replace(/-/g, '/');\n    }\n  }\n  \n  // 比對日期\n  const matchesDate = recordDate === todayStr;\n  \n  // 檢查是否為請假（不是正常上班）\n  const isLeave = record.status && \n                  record.status !== '正常上班' && \n                  record.status !== '';\n  \n  return matchesDate && isLeave;\n});\n\nconsole.log(\"今日請假人數:\", todayLeaves.length);\n\n// 建立輸出資料\nlet sheetData = todayLeaves.map(record => ({\n  date: record.date || todayStr,\n  userName: record.userName || '未知',\n  status: record.status || '未知狀態',\n  checkInTime: record.firstCheckIn || record.checkInTime || '-',\n  checkOutTime: record.lastCheckOut || record.checkOutTime || '-',\n  details: record.details || '無詳細資訊'\n}));\n\n// 如果沒有請假記錄，加入預設訊息\nif (sheetData.length === 0) {\n  console.log(\"今日無人請假\");\n  sheetData = [{\n    date: todayStr,\n    userName: '無',\n    status: '全員正常上班',\n    checkInTime: '-',\n    checkOutTime: '-',\n    details: '今日無人請假'\n  }];\n}\n\nreturn sheetData;"
       },
-      "id": "b7ab79a2-8d1a-44b9-8af4-ec812595eece",
+      "id": "cd19094c-0182-4fc6-a5b6-04e2c1fb5e59",
       "name": "今日請假資料",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1056,
-        -256
+        -176,
+        -144
       ]
     },
     {
       "parameters": {
         "jsCode": "// ========================================\n// 預編譯的正則表達式常數\n// ========================================\nconst LEAVE_PATTERNS = {\n  // 模式 1: \"14-\", \"14:00-\", \"11:44~\" 等 (從某時間到下班)\n  partialToEnd: /(\\d{1,2}):?(\\d{2})?[\\s]*[\\-~][\\s]*(?=\\s|@|$|特休|病假|事假|年假|出差|遠端)/,\n  // 模式 2: \"14:00-18:00\" 或 \"14:00~18:00\" (明確的時間範圍)\n  timeRange: /(\\d{1,2}):(\\d{2})[\\s]*[\\-~][\\s]*(\\d{1,2}):(\\d{2})/\n};\n\n// 使用者名稱驗證正則表達式\nconst VALID_USER_PATTERNS = [\n  /^[a-zA-Z]+\\.[a-zA-Z]+$/,           // 英文名.姓氏縮寫 (如 ryan.l)\n  /^[a-zA-Z]+_[a-zA-Z]+$/,            // 英文名_姓氏\n  /^[a-zA-Z]+\\-[a-zA-Z]+$/,           // 部門-名字格式 (如 RD-Alan)\n  /^[a-zA-Z][a-zA-Z0-9._\\-]{1,30}$/,  // 一般英文使用者名稱\n  /^[\\u4e00-\\u9fa5]{2,5}$/,           // 中文名字（2-5個字）\n  /^[A-Za-z]+[-\\s][\\u4e00-\\u9fa5\\w\\s]+$/, // 部門-中英文混合 (如 Math-Mike Tsai)\n  /^U[A-Z0-9]{10,12}$/                // Slack User ID 格式\n];\n\nconst INVALID_USER_PATTERNS = [\n  /^\\d+\\/\\d+$/,                    // 日期格式 (如 \"1/16\")\n  /^\\d{3,4}[~\\-]\\d{3,4}$/,         // 時間範圍 (如 \"1730~1800\")\n  /^\\d+\\./,                        // 數字開頭加句點 (如 \"15.\")\n  /腸胃炎|病假|特休|年假|出差/,      // 請假類型關鍵字\n  /之後改|待確認|暫定/               // 備註文字\n];\n\n// 請假類型對應表 (使用 Map 取代 switch-case)\nconst LEAVE_TYPE_MAP = new Map([\n  ['病假', 'sickLeave'],\n  ['生病', 'sickLeave'],\n  ['看診', 'sickLeave'],\n  ['就醫', 'sickLeave'],\n  ['特休', 'annualLeave'],\n  ['年假', 'annualLeave'],\n  ['休假', 'annualLeave'],\n  ['出差', 'businessTrip'],\n  ['公出', 'businessTrip'],\n  ['外出', 'businessTrip'],\n  ['出公差', 'businessTrip'],\n  ['遠端工作', 'remote'],\n  ['在家工作', 'remote'],\n  ['remote', 'remote'],\n  ['WFH', 'remote'],\n  ['居家辦公', 'remote'],\n  ['事假', 'personalLeave'],\n  ['私事', 'personalLeave'],\n  ['個人事假', 'personalLeave'],\n  ['婚假', 'marriageLeave'],\n  ['結婚', 'marriageLeave'],\n  ['喪假', 'bereavementLeave'],\n  ['奔喪', 'bereavementLeave'],\n  ['產假', 'maternityLeave'],\n  ['陪產假', 'maternityLeave'],\n  ['育嬰假', 'maternityLeave'],\n  ['產檢假', 'maternityLeave'],\n  ['生理假', 'menstrualLeave'],\n  ['生理', 'menstrualLeave'],\n  ['經期', 'menstrualLeave'],\n  ['MC', 'menstrualLeave'],\n  ['補休', 'compensatoryLeave'],\n  ['補假', 'compensatoryLeave'],\n  ['調休', 'compensatoryLeave'],\n  ['公假', 'officialLeave'],\n  ['投票', 'officialLeave'],\n  ['兵役', 'officialLeave'],\n  ['公務', 'officialLeave'],\n  ['生日假', 'birthdayLeave'],\n  ['生日', 'birthdayLeave'],\n  ['Birthday', 'birthdayLeave'],\n  ['BD', 'birthdayLeave']\n]);\n\n// 欄位名稱映射\nconst LEAVE_FIELD_MAP = {\n  sickLeave: { days: 'sickLeave', hours: 'sickLeaveHours' },\n  annualLeave: { days: 'annualLeave', hours: 'annualLeaveHours' },\n  businessTrip: { days: 'businessTrip', hours: 'businessTripHours' },\n  remote: { days: 'remote', hours: 'remoteHours' },\n  personalLeave: { days: 'personalLeave', hours: 'personalLeaveHours' },\n  marriageLeave: { days: 'marriageLeave', hours: 'marriageLeaveHours' },\n  bereavementLeave: { days: 'bereavementLeave', hours: 'bereavementLeaveHours' },\n  maternityLeave: { days: 'maternityLeave', hours: 'maternityLeaveHours' },\n  menstrualLeave: { days: 'menstrualLeave', hours: 'menstrualLeaveHours' },\n  compensatoryLeave: { days: 'compensatoryLeave', hours: 'compensatoryLeaveHours' },\n  officialLeave: { days: 'officialLeave', hours: 'officialLeaveHours' },\n  birthdayLeave: { days: 'birthdayLeave', hours: 'birthdayLeaveHours' },\n  others: { days: 'others', hours: 'othersHours' }\n};\n\n// ========================================\n// 計算請假時數函數\n// ========================================\nfunction calculateLeaveHours(detailsText) {\n  if (!detailsText) {\n    return { hours: 8, days: 1, type: 'full-day' };\n  }\n\n  const text = detailsText.toLowerCase();\n\n  // 模式 1: \"14-\", \"14:00-\", \"11:44~\" 等 (從某時間到下班)\n  const match1 = text.match(LEAVE_PATTERNS.partialToEnd);\n  if (match1) {\n    const startHour = parseInt(match1[1]);\n    const startMin = match1[2] ? parseInt(match1[2]) : 0;\n    const endHour = 18; // 假設下班時間 18:00\n    const endMin = 0;\n    const totalMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);\n    const hours = Math.max(0, totalMinutes / 60);\n    return {\n      hours: hours,\n      days: hours / 8,\n      type: 'partial',\n      description: startHour + ':' + startMin.toString().padStart(2, '0') + '到下班（' + hours.toFixed(1) + '小時）'\n    };\n  }\n\n  // 模式 2: \"14:00-18:00\" 或 \"14:00~18:00\" (明確的時間範圍)\n  const match2 = text.match(LEAVE_PATTERNS.timeRange);\n  if (match2) {\n    const startHour = parseInt(match2[1]);\n    const startMin = parseInt(match2[2]);\n    const endHour = parseInt(match2[3]);\n    const endMin = parseInt(match2[4]);\n    const totalMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin);\n    const hours = totalMinutes / 60;\n    return {\n      hours: hours,\n      days: hours / 8,\n      type: 'partial',\n      description: hours.toFixed(1) + '小時'\n    };\n  }\n\n  // 模式 3: \"上午\" (09:00-12:00 = 3小時)\n  if (text.includes('上午')) {\n    return { hours: 3, days: 3/8, type: 'morning', description: '上午（3小時）' };\n  }\n\n  // 模式 4: \"下午\" (14:00-18:00 = 4小時)\n  if (text.includes('下午')) {\n    return { hours: 4, days: 4/8, type: 'afternoon', description: '下午（4小時）' };\n  }\n\n  // 模式 5: \"半天\"\n  if (text.includes('半天')) {\n    return { hours: 4, days: 4/8, type: 'half-day', description: '半天（4小時）' };\n  }\n\n  // 預設：全天 8 小時\n  return { hours: 8, days: 1, type: 'full-day', description: '全天（8小時）' };\n}\n\n// ========================================\n// 驗證使用者名稱函數（優化版）\n// ========================================\nfunction isValidUserName(name) {\n  if (!name || typeof name !== 'string') return false;\n\n  const trimmedName = name.trim();\n\n  // 排除 Unknown\n  if (trimmedName.toLowerCase() === 'unknown') return false;\n\n  // 排除明顯不是使用者名稱的內容\n  if (INVALID_USER_PATTERNS.some(pattern => pattern.test(trimmedName))) {\n    return false;\n  }\n\n  // 正向驗證：檢查是否符合有效的使用者名稱格式\n  return VALID_USER_PATTERNS.some(pattern => pattern.test(trimmedName));\n}\n\nconst data = $input.first().json;\nconst year2025Records = data.records.filter(record => {\n  return record.date && record.date.startsWith('2025');\n});\n\nconst leaveStats = {};\nconst invalidRecords = [];\nconst unknownStatuses = new Set(); // 收集未分類的狀態\nlet unknownCount = 0; // 計算被排除的 Unknown 記錄數\n\nyear2025Records.forEach(record => {\n  // 先檢查是否為 Unknown\n  if (record.userName && record.userName.toLowerCase() === 'unknown') {\n    unknownCount++;\n    return; // 直接跳過 Unknown 記錄\n  }\n\n  // 使用 userName 欄位，但要先驗證\n  if (!isValidUserName(record.userName)) {\n    invalidRecords.push({\n      date: record.date,\n      userName: record.userName,\n      status: record.status,\n      details: record.details,\n      issue: '無效的使用者名稱'\n    });\n    return;\n  }\n\n  if (record.status && record.status !== '正常上班') {\n    const userName = record.userName;\n\n    if (!leaveStats[userName]) {\n      leaveStats[userName] = {\n        userName: userName,\n        totalDays: 0,\n        totalHours: 0,\n        sickLeave: 0,\n        sickLeaveHours: 0,\n        annualLeave: 0,\n        annualLeaveHours: 0,\n        businessTrip: 0,\n        businessTripHours: 0,\n        remote: 0,\n        remoteHours: 0,\n        personalLeave: 0,\n        personalLeaveHours: 0,\n        marriageLeave: 0,\n        marriageLeaveHours: 0,\n        bereavementLeave: 0,\n        bereavementLeaveHours: 0,\n        maternityLeave: 0,\n        maternityLeaveHours: 0,\n        menstrualLeave: 0,\n        menstrualLeaveHours: 0,\n        compensatoryLeave: 0,\n        compensatoryLeaveHours: 0,\n        officialLeave: 0,\n        officialLeaveHours: 0,\n        birthdayLeave: 0,\n        birthdayLeaveHours: 0,\n        others: 0,\n        othersHours: 0,\n        halfDayCount: 0\n      };\n    }\n\n    // 使用新的時數計算函數\n    const leaveInfo = calculateLeaveHours(record.details);\n    const daysToAdd = leaveInfo.days;\n    const hoursToAdd = leaveInfo.hours;\n    leaveStats[userName].totalDays += daysToAdd;\n    leaveStats[userName].totalHours += hoursToAdd;\n\n    if (leaveInfo.type === 'half-day' || leaveInfo.days < 1) {\n      leaveStats[userName].halfDayCount++;\n    }\n\n    // 使用查找表取代 switch-case\n    const leaveType = LEAVE_TYPE_MAP.get(record.status);\n    if (leaveType && LEAVE_FIELD_MAP[leaveType]) {\n      const fields = LEAVE_FIELD_MAP[leaveType];\n      leaveStats[userName][fields.days] += daysToAdd;\n      leaveStats[userName][fields.hours] += hoursToAdd;\n    } else {\n      // 未分類的狀態\n      leaveStats[userName].others += daysToAdd;\n      leaveStats[userName].othersHours += hoursToAdd;\n      unknownStatuses.add(record.status);\n    }\n  }\n});\n\nconst ranking = Object.values(leaveStats)\n  .filter(stat => stat.userName.toLowerCase() !== 'unknown') // 先過濾掉 Unknown\n  .sort((a, b) => b.totalDays - a.totalDays)\n  .map((stat, index) => ({\n    rank: index + 1,\n    userName: stat.userName,\n    totalDays: stat.totalDays,\n    totalHours: stat.totalHours,\n    sickLeave: stat.sickLeave,\n    sickLeaveHours: stat.sickLeaveHours,\n    annualLeave: stat.annualLeave,\n    annualLeaveHours: stat.annualLeaveHours,\n    businessTrip: stat.businessTrip,\n    businessTripHours: stat.businessTripHours,\n    remote: stat.remote,\n    remoteHours: stat.remoteHours,\n    personalLeave: stat.personalLeave,\n    personalLeaveHours: stat.personalLeaveHours,\n    marriageLeave: stat.marriageLeave,\n    marriageLeaveHours: stat.marriageLeaveHours,\n    bereavementLeave: stat.bereavementLeave,\n    bereavementLeaveHours: stat.bereavementLeaveHours,\n    maternityLeave: stat.maternityLeave,\n    maternityLeaveHours: stat.maternityLeaveHours,\n    menstrualLeave: stat.menstrualLeave,\n    menstrualLeaveHours: stat.menstrualLeaveHours,\n    compensatoryLeave: stat.compensatoryLeave,\n    compensatoryLeaveHours: stat.compensatoryLeaveHours,\n    officialLeave: stat.officialLeave,\n    officialLeaveHours: stat.officialLeaveHours,\n    birthdayLeave: stat.birthdayLeave,\n    birthdayLeaveHours: stat.birthdayLeaveHours,\n    others: stat.others,\n    othersHours: stat.othersHours,\n    halfDayCount: stat.halfDayCount\n  }));\n\n// 診斷資訊\nconsole.log('=== 2025年請假統計報告 ===');\nconsole.log(`\\n處理了 ${year2025Records.length} 筆 2025 年記錄`);\nconsole.log(`排除了 ${unknownCount} 筆 Unknown 記錄`);\nconsole.log(`統計了 ${Object.keys(leaveStats).length} 位員工的請假記錄`);\n\nif (invalidRecords.length > 0) {\n  console.log(`\\n⚠️ 發現 ${invalidRecords.length} 筆無效記錄`);\n  const uniqueInvalidNames = [...new Set(invalidRecords.map(r => r.userName))];\n  console.log('無效的使用者名稱範例:', uniqueInvalidNames.slice(0, 5));\n}\n\nif (unknownStatuses.size > 0) {\n  console.log('\\n📝 未分類的請假狀態:');\n  Array.from(unknownStatuses).forEach(status => {\n    console.log(`  - \"${status}\"`);\n  });\n}\n\n// 顯示請假統計摘要\nconsole.log('\\n📊 請假類型統計摘要:');\nconst totalByType = {\n  sickLeave: 0,\n  annualLeave: 0,\n  businessTrip: 0,\n  remote: 0,\n  personalLeave: 0,\n  marriageLeave: 0,\n  bereavementLeave: 0,\n  maternityLeave: 0,\n  menstrualLeave: 0,\n  compensatoryLeave: 0,\n  officialLeave: 0,\n  birthdayLeave: 0,\n  others: 0\n};\n\nranking.forEach(r => {\n  totalByType.sickLeave += r.sickLeave;\n  totalByType.annualLeave += r.annualLeave;\n  totalByType.businessTrip += r.businessTrip;\n  totalByType.remote += r.remote;\n  totalByType.personalLeave += r.personalLeave;\n  totalByType.marriageLeave += r.marriageLeave;\n  totalByType.bereavementLeave += r.bereavementLeave;\n  totalByType.maternityLeave += r.maternityLeave;\n  totalByType.menstrualLeave += r.menstrualLeave;\n  totalByType.compensatoryLeave += r.compensatoryLeave;\n  totalByType.officialLeave += r.officialLeave;\n  totalByType.birthdayLeave += r.birthdayLeave;\n  totalByType.others += r.others;\n});\n\nconsole.log(`  病假: ${totalByType.sickLeave} 天`);\nconsole.log(`  特休/年假: ${totalByType.annualLeave} 天`);\nconsole.log(`  出差/公出: ${totalByType.businessTrip} 天`);\nconsole.log(`  遠端工作: ${totalByType.remote} 天`);\nconsole.log(`  事假: ${totalByType.personalLeave} 天`);\nconsole.log(`  婚假: ${totalByType.marriageLeave} 天`);\nconsole.log(`  喪假: ${totalByType.bereavementLeave} 天`);\nconsole.log(`  產假/陪產假: ${totalByType.maternityLeave} 天`);\nconsole.log(`  生理假: ${totalByType.menstrualLeave} 天`);\nconsole.log(`  補休: ${totalByType.compensatoryLeave} 天`);\nconsole.log(`  公假: ${totalByType.officialLeave} 天`);\nconsole.log(`  生日假: ${totalByType.birthdayLeave} 天`);\nconsole.log(`  其他: ${totalByType.others} 天`);\n\n// 顯示前10名請假最多的員工\nconsole.log('\\n🏆 請假天數排行榜 Top 10:');\nranking.slice(0, 10).forEach(r => {\n  let details = [];\n  if (r.annualLeave > 0) details.push(`特休:${r.annualLeave}`);\n  if (r.sickLeave > 0) details.push(`病假:${r.sickLeave}`);\n  if (r.remote > 0) details.push(`遠端:${r.remote}`);\n  if (r.businessTrip > 0) details.push(`出差:${r.businessTrip}`);\n  if (r.personalLeave > 0) details.push(`事假:${r.personalLeave}`);\n  if (r.menstrualLeave > 0) details.push(`生理假:${r.menstrualLeave}`);\n  if (r.birthdayLeave > 0) details.push(`生日假:${r.birthdayLeave}`);\n  if (r.compensatoryLeave > 0) details.push(`補休:${r.compensatoryLeave}`);\n  if (r.marriageLeave > 0) details.push(`婚假:${r.marriageLeave}`);\n  if (r.bereavementLeave > 0) details.push(`喪假:${r.bereavementLeave}`);\n  if (r.maternityLeave > 0) details.push(`產假:${r.maternityLeave}`);\n  if (r.officialLeave > 0) details.push(`公假:${r.officialLeave}`);\n  if (r.others > 0) details.push(`其他:${r.others}`);\n  if (r.halfDayCount > 0) details.push(`含${r.halfDayCount}次半天`);\n\n  console.log(`  ${r.rank}. ${r.userName}: ${r.totalDays}天 (${details.join(', ')})`);\n});\n\n// 特別統計：使用生日假的員工\nconst birthdayLeaveUsers = ranking.filter(r => r.birthdayLeave > 0);\nif (birthdayLeaveUsers.length > 0) {\n  console.log('\\n🎂 使用生日假的員工:');\n  birthdayLeaveUsers.forEach(user => {\n    console.log(`  - ${user.userName}: ${user.birthdayLeave} 天`);\n  });\n}\n\n// 特別統計：使用生理假的員工\nconst menstrualLeaveUsers = ranking.filter(r => r.menstrualLeave > 0);\nif (menstrualLeaveUsers.length > 0) {\n  console.log('\\n🩺 使用生理假的員工:');\n  menstrualLeaveUsers.forEach(user => {\n    console.log(`  - ${user.userName}: ${user.menstrualLeave} 天`);\n  });\n}\n\nreturn ranking;\n"
       },
-      "id": "9d526cfe-f498-496a-a6a5-610690975d42",
+      "id": "a4856b9a-86cb-4f0b-b41b-f183518fd023",
       "name": "2025年排行榜",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -992,
-        240
+        -112,
+        352
       ]
     },
     {
       "parameters": {
-        "authentication": "oAuth2",
         "resource": "channel",
         "operation": "history",
         "channelId": {
@@ -72,25 +72,26 @@
         "returnAll": true,
         "filters": {}
       },
-      "id": "ad58d52c-efd9-471b-b794-e4bcd6016c09",
+      "id": "ceba5f32-4e34-4e8e-8af1-a58268533e63",
       "name": "取得頻道資訊",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.1,
       "position": [
-        -1440,
-        240
+        -560,
+        352
       ],
       "webhookId": "b6c1ebff-0cc6-4bfd-85d3-d0f73abed2f9",
       "alwaysOutputData": false,
       "credentials": {
-        "slackOAuth2Api": {
-          "id": "uB8nqjfDBs738eff",
+        "slackApi": {
+          "id": "UfdPURfRn78d2HjH",
           "name": "n8n-ops"
         }
       }
     },
     {
       "parameters": {
+        "authentication": "serviceAccount",
         "operation": "clear",
         "documentId": {
           "__rl": true,
@@ -110,24 +111,25 @@
         "startIndex": 2,
         "rowsToDelete": 300
       },
-      "id": "85384607-64f9-4414-b999-6b242de92a5c",
+      "id": "4a3c6a39-321a-4aa7-8e57-fc9cdb5f2a43",
       "name": "清空2025年排行榜",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1504,
-        -80
+        -624,
+        32
       ],
       "executeOnce": false,
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2jHbIbD9Qfj8dzba",
-          "name": "n8n-GoogleSheet"
+        "googleApi": {
+          "id": "u1JNoGs9f7NtuqBD",
+          "name": "n8n-googlesheet"
         }
       }
     },
     {
       "parameters": {
+        "authentication": "serviceAccount",
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -331,24 +333,25 @@
         },
         "options": {}
       },
-      "id": "adbe9b52-1d2b-42df-b589-d14e95419d4b",
+      "id": "52d3977a-8357-4164-888f-3acd5aac605b",
       "name": "更新2025年排行榜",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -768,
-        240
+        112,
+        352
       ],
       "alwaysOutputData": false,
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2jHbIbD9Qfj8dzba",
-          "name": "n8n-GoogleSheet"
+        "googleApi": {
+          "id": "u1JNoGs9f7NtuqBD",
+          "name": "n8n-googlesheet"
         }
       }
     },
     {
       "parameters": {
+        "authentication": "serviceAccount",
         "operation": "clear",
         "documentId": {
           "__rl": true,
@@ -368,23 +371,24 @@
         "startIndex": 2,
         "rowsToDelete": 65535
       },
-      "id": "0ebcb646-77a3-4585-ac89-dd07647ee946",
+      "id": "b940c649-5fdc-4117-8c62-ca9294be6bfe",
       "name": "清空今日請假",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -1680,
-        -80
+        -800,
+        32
       ],
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2jHbIbD9Qfj8dzba",
-          "name": "n8n-GoogleSheet"
+        "googleApi": {
+          "id": "u1JNoGs9f7NtuqBD",
+          "name": "n8n-googlesheet"
         }
       }
     },
     {
       "parameters": {
+        "authentication": "serviceAccount",
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -481,18 +485,18 @@
         },
         "options": {}
       },
-      "id": "c61b1eea-8fff-4729-bc93-17af64caccbb",
+      "id": "bea34d1f-b6fd-4bbc-bbf0-a3f052b62151",
       "name": "更新今日請假",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4,
       "position": [
-        -864,
-        -64
+        16,
+        48
       ],
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "2jHbIbD9Qfj8dzba",
-          "name": "n8n-GoogleSheet"
+        "googleApi": {
+          "id": "u1JNoGs9f7NtuqBD",
+          "name": "n8n-googlesheet"
         }
       }
     },
@@ -503,10 +507,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -864,
-        -256
+        16,
+        -144
       ],
-      "id": "0d03a70c-c9c6-4e22-b648-fec9c45cb981",
+      "id": "dd2a2f2b-9c43-4059-9e07-6d9a30d13ece",
       "name": "處理請假資料",
       "executeOnce": false,
       "alwaysOutputData": false
@@ -546,28 +550,27 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -480,
-        -256
+        400,
+        -144
       ],
-      "id": "cff0907e-06ae-4f05-b4ee-efdec9491f18",
+      "id": "2ffcddce-b5d1-4065-9911-7914ace3306d",
       "name": "If"
     },
     {
       "parameters": {
         "jsCode": "// 從前一個節點獲取資料\nconst items = $input.all();\n\n// 讀取上次的出勤 hash（從 Slack 訊息的最後一行）\nlet previousHash = null;\nif (items.length > 0) {\n  const messages = items;\n  if (messages.length > 0) {\n    const lastMessage = messages[0].json;\n    const text = lastMessage.text || '';\n    \n    // 從訊息中提取 hash (格式: <!-- hash:xxxxx -->)\n    const hashMatch = text.match(/<!-- hash:(.+?) -->/);\n    if (hashMatch) {\n      previousHash = hashMatch[1];\n    }\n  }\n}\n// 檢查是否需要發送新訊息或更新現有訊息\nconst now = new Date();\nconst taipeiTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));\nconst currentHour = taipeiTime.getHours();\nconst currentDate = taipeiTime.toDateString();\n\n// 從 Static Data 取得上次的 timestamp 和日期\nconst staticData = $getWorkflowStaticData('global');\nlet messageTs = staticData.messageTs || null;\nlet lastDate = staticData.lastDate || null;\n\nconsole.log('當前時間:', taipeiTime);\nconsole.log('當前小時:', currentHour);\nconsole.log('儲存的 timestamp:', messageTs);\nconsole.log('上次日期:', lastDate);\nconsole.log('當前日期:', currentDate);\n\n// 判斷是否需要發送新訊息\n// 條件：早上8點 或 新的一天 或 沒有 timestamp\nlet shouldSendNewMessage = false;\n\nif (!messageTs) {\n  console.log('沒有 timestamp，需要發送新訊息');\n  shouldSendNewMessage = true;\n} else if (lastDate !== currentDate && currentHour >= 8) {\n  console.log('新的一天且已過8點，需要發送新訊息');\n  shouldSendNewMessage = true;\n  // 清除舊的 timestamp\n  staticData.messageTs = null;\n  messageTs = null;\n} else if (currentHour === 8 && lastDate !== currentDate) {\n  console.log('早上8點且是新的一天，需要發送新訊息');\n  shouldSendNewMessage = true;\n  // 清除舊的 timestamp\n  staticData.messageTs = null;\n  messageTs = null;\n}\n\n// 更新最後處理日期\nstaticData.lastDate = currentDate;\n\nreturn {\n  previousHash: previousHash,\n  shouldSendNewMessage,\n  messageTs,\n  currentDate,\n  currentHour,\n  taipeiTime: taipeiTime.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })\n};"
       },
-      "id": "82f75ca4-9836-4161-b07e-2aadbcf5d3a2",
+      "id": "e99ffca7-c1a7-4729-acd7-9773795f4ca6",
       "name": "檢查訊息狀態",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1648,
-        240
+        -768,
+        352
       ]
     },
     {
       "parameters": {
-        "authentication": "oAuth2",
         "select": "user",
         "user": {
           "__rl": true,
@@ -578,18 +581,18 @@
         "text": "={{ $('處理請假資料').item.json.text }}",
         "otherOptions": {}
       },
-      "id": "7205d3d9-1b56-4fe5-87aa-e2a1220dd66a",
+      "id": "a60c8b7c-f354-4b98-b401-3b750d1bf2ad",
       "name": "lonely.h",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.1,
       "position": [
-        -240,
-        -208
+        640,
+        -96
       ],
       "webhookId": "e6f7aa0e-46db-4d6d-8eba-16a722eea060",
       "credentials": {
-        "slackOAuth2Api": {
-          "id": "uB8nqjfDBs738eff",
+        "slackApi": {
+          "id": "UfdPURfRn78d2HjH",
           "name": "n8n-ops"
         }
       }
@@ -666,11 +669,6 @@
         ]
       ]
     },
-    "清空2025年排行榜": {
-      "main": [
-        []
-      ]
-    },
     "清空今日請假": {
       "main": [
         [
@@ -701,8 +699,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "檢查訊息狀態": {
@@ -717,9 +714,6 @@
       ]
     }
   },
-  "pinData": {},
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "d199863ffc9db867666b46f91ded4dd90670cb9b6704b5177a20902e2f629e3b"
-  }
+  "settings": {},
+  "staticData": null
 }
