@@ -1,0 +1,257 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 取得台北時區的日期與時間\nconst now = new Date();\nconst timezone = 'Asia/Taipei';\nconst dateStr = now.toLocaleDateString('zh-TW', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\\//g, '-');\nconst timeStr = now.toLocaleTimeString('zh-TW', { timeZone: timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });\n\nreturn {\n  json: {\n    current_date: dateStr,\n    current_time: timeStr,\n    timestamp: now.toISOString(),\n    timezone: timezone\n  }\n};"
+      },
+      "id": "28670afc-cb7d-4c8d-a57e-b66262da5a8c",
+      "name": "Get Date Time",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 格式化日期為所需格式\nconst inputData = $input.first().json;\nconst currentDate = inputData.current_date;\nconst formattedDate = currentDate.replace(/-/g, '');\n\nreturn {\n  json: {\n    ...inputData,\n    formatted_date: formattedDate,\n    display_date: currentDate,\n    api_date: formattedDate\n  }\n};"
+      },
+      "id": "b395b0ae-73ff-4e71-86e1-53964d209378",
+      "name": "Format Date",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prod-apnortheast-a.online.tableau.com/api/3.4/auth/signin",
+        "sendBody": true,
+        "contentType": "raw",
+        "body": "<tsRequest>|\t<credentials\t  personalAccessTokenName=\"n8n-token\" personalAccessTokenSecret=\"2q8IRO+0QRqBlyPkN/ExXg==:VLH8z7ApygXo7nOEqXqtZtd1SgASPRii\" >  \t\t<site contentUrl=\"tableauadmin59b92d016b\" />\t</credentials></tsRequest>",
+        "options": {}
+      },
+      "id": "51ed64f6-6282-46bd-8e91-0a6bea648186",
+      "name": "Tableau Login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1104,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 取得輸入數據\nconst dateData = $input.all().find(item => item.json.formatted_date)?.json || $input.first().json;\nconst tableauAuth = $input.all().find(item => item.json.credentials || item.json.token)?.json || $input.first().json;\n\nconst TABLEAU_SITE_ID = \"1b4032aa-745d-491e-93a6-847c7d77e26e\";\nconst TABLEAU_BASE_URL = \"https://prod-apnortheast-a.online.tableau.com/api/3.4\";\nconst TOP100_VIEW_ID = \"73f522ea-19fd-4e62-bafb-c0abe8755ec8\";\n\n// 提取 Tableau token\nlet tableauToken = null;\ntry {\n  if (tableauAuth.credentials) {\n    tableauToken = tableauAuth.credentials.token || tableauAuth.credentials.sessionId;\n  } else if (tableauAuth.token) {\n    tableauToken = tableauAuth.token;\n  }\n} catch (error) {\n  console.log('無法獲取 Tableau token:', error.message);\n}\n\n// 數據源配置 - Top100 player 和 Top5 player_game 發送到兩個不同的 Slack channels\nconst TOP5_GAME_VIEW_ID = \"110c2b5c-107b-46b4-8f92-cb04f8678928\";\n\nconst dataSources = [\n  {\n    id: \"top100_player_gemini\",\n    name: \"Top100 player\",\n    viewId: TOP100_VIEW_ID,\n    tableauWorkbook: \"Top100-player.png\",\n    slackChannel: \"C08CEM8BK45\",\n    description: \"Top100 player 數據處理 - gemini_top100player channel\",\n    order: 1,\n    sortOrder: \"001\"\n  },\n  {\n    id: \"top100_player_tableau\",\n    name: \"Top100 player\",\n    viewId: TOP100_VIEW_ID,\n    tableauWorkbook: \"Top100-player.png\",\n    slackChannel: \"C085A704U7N\",\n    description: \"Top100 player 數據處理 - tableau-gemini channel\",\n    order: 2,\n    sortOrder: \"002\"\n  },\n  {\n    id: \"top5_player_game_gemini\",\n    name: \"Top5 player_game\",\n    viewId: TOP5_GAME_VIEW_ID,\n    tableauWorkbook: \"Top5-player_game.png\",\n    slackChannel: \"C08CEM8BK45\",\n    description: \"Top5 player_game 數據處理 - gemini_top100player channel\",\n    order: 3,\n    sortOrder: \"003\"\n  },\n  {\n    id: \"top5_player_game_tableau\",\n    name: \"Top5 player_game\",\n    viewId: TOP5_GAME_VIEW_ID,\n    tableauWorkbook: \"Top5-player_game.png\",\n    slackChannel: \"C085A704U7N\",\n    description: \"Top5 player_game 數據處理 - tableau-gemini channel\",\n    order: 4,\n    sortOrder: \"004\"\n  }\n];\n\n// 確保順序正確 - 按 order 排序\nconst sortedDataSources = dataSources.sort((a, b) => a.order - b.order);\n\nconsole.log(`準備處理 ${sortedDataSources.length} 個數據源，按順序執行:`);\nsortedDataSources.forEach((source, index) => {\n  console.log(`${index + 1}. ${source.name} -> ${source.slackChannel} (order: ${source.order})`);\n});\n\n// 返回處理後的數據，確保順序\nconst results = sortedDataSources.map((source, index) => ({\n  json: {\n    ...source,\n    index: index + 1,\n    total: sortedDataSources.length,\n    date: dateData.formatted_date,\n    displayDate: dateData.display_date,\n    startTime: new Date().toISOString(),\n    status: 'pending',\n    tableauToken,\n    siteId: TABLEAU_SITE_ID,\n    baseUrl: TABLEAU_BASE_URL,\n    executionOrder: index + 1\n  }\n}));\n\nreturn results;"
+      },
+      "id": "e7dd1cae-b1b7-46ec-9a67-66093c909b2a",
+      "name": "Data Sources Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "c47ca030-fe48-4940-ad14-c8a3e90431a8",
+      "name": "Process Data Sources",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1520,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.baseUrl}}/sites/{{$json.siteId}}/views/{{$json.viewId}}/image?maxAge=1&:refresh=y",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Tableau-Auth",
+              "value": "={{$json.tableauToken}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "eec9d8ed-b74f-48e2-b2f8-8311ea861002",
+      "name": "Get Tableau Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1744,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "options": {
+          "channelId": "={{ $('Process Data Sources').item.json.slackChannel }}",
+          "fileName": "={{ $('Process Data Sources').item.json.tableauWorkbook }}",
+          "title": "={{ $('Process Data Sources').item.json.displayDate }} - {{ $('Process Data Sources').item.json.name }}"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1968,
+        -96
+      ],
+      "id": "84b1c938-78c7-4d45-b691-ee958451ad5d",
+      "name": "Upload to Slack",
+      "webhookId": "aab52868-2fb6-47be-8631-e1f79099f475",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "uB8nqjfDBs738eff",
+          "name": "n8n-ops"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": "=3"
+      },
+      "id": "99c45bba-119c-472c-b122-0db0c3148046",
+      "name": "Wait for 3s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2192,
+        -96
+      ],
+      "webhookId": "63ef4931-b4a9-47fd-a2ea-9b97e83888f9"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "50 08 * * *"
+            }
+          ]
+        }
+      },
+      "id": "d8ebd221-2887-4910-ae5a-1d03d11535af",
+      "name": "每日早上08:50",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -128
+      ]
+    }
+  ],
+  "connections": {
+    "Get Date Time": {
+      "main": [
+        [
+          {
+            "node": "Format Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Date": {
+      "main": [
+        [
+          {
+            "node": "Tableau Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tableau Login": {
+      "main": [
+        [
+          {
+            "node": "Data Sources Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Sources Config": {
+      "main": [
+        [
+          {
+            "node": "Process Data Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Data Sources": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Tableau Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tableau Image": {
+      "main": [
+        [
+          {
+            "node": "Upload to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Slack": {
+      "main": [
+        [
+          {
+            "node": "Wait for 3s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for 3s": {
+      "main": [
+        [
+          {
+            "node": "Process Data Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d199863ffc9db867666b46f91ded4dd90670cb9b6704b5177a20902e2f629e3b"
+  }
+}
