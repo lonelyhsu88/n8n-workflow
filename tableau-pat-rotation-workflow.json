@@ -1,0 +1,213 @@
+{
+  "name": "Tableau PAT Auto-Rotation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Weekly Check (Mon 9AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// PAT Configuration - Edit these values\nconst config = {\n  // Tableau Cloud Settings\n  tableau: {\n    baseUrl: 'https://prod-apnortheast-a.online.tableau.com',\n    siteContentUrl: 'tableauadmin59b92d016b'\n  },\n  \n  // Current PAT Information\n  // ⚠️ 重要：每次手動輪替後需要更新這些值\n  pat: {\n    currentTokenName: 'n8n-token-2026',\n    // PAT 創建日期 (ISO format)\n    createdAt: '2025-11-28T00:00:00.000Z',\n    // PAT 有效期為 180 天 (Tableau Cloud 預設)\n    validityDays: 180,\n    // 提前幾天開始提醒\n    reminderThresholdDays: 14\n  },\n  \n  // Slack Notification Settings\n  slack: {\n    channel: '#ops-test'\n  }\n};\n\n// Calculate PAT expiry\nconst createdAt = new Date(config.pat.createdAt);\nconst expiresAt = new Date(createdAt);\nexpiresAt.setDate(expiresAt.getDate() + config.pat.validityDays);\n\nconst now = new Date();\nconst daysRemaining = Math.floor((expiresAt - now) / (1000 * 60 * 60 * 24));\nconst needsReminder = daysRemaining <= config.pat.reminderThresholdDays;\nconst isExpired = daysRemaining <= 0;\n\nconst result = {\n  ...config,\n  status: {\n    createdAt: createdAt.toISOString(),\n    expiresAt: expiresAt.toISOString(),\n    daysRemaining,\n    needsReminder,\n    isExpired,\n    checkTime: now.toISOString()\n  }\n};\n\nconsole.log(`PAT Status Check:`);\nconsole.log(`  Token Name: ${config.pat.currentTokenName}`);\nconsole.log(`  Created: ${createdAt.toISOString().slice(0, 10)}`);\nconsole.log(`  Expires: ${expiresAt.toISOString().slice(0, 10)}`);\nconsole.log(`  Days Remaining: ${daysRemaining}`);\nconsole.log(`  Needs Reminder: ${needsReminder ? 'YES' : 'NO'}`);\n\nreturn { json: result };"
+      },
+      "id": "load-config",
+      "name": "Load PAT Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "needs-reminder",
+              "leftValue": "={{ $json.status.needsReminder }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-expiry",
+      "name": "Needs Reminder?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare reminder notification for Slack\nconst config = $input.first().json;\nconst now = new Date();\nconst taiwanTime = now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });\n\nconst expiresAt = new Date(config.status.expiresAt);\nconst urgency = config.status.daysRemaining <= 7 ? '🚨 緊急' : '⚠️ 提醒';\nconst urgencyColor = config.status.daysRemaining <= 7 ? 'danger' : 'warning';\n\nconst message = {\n  channel: config.slack.channel,\n  blocks: [\n    {\n      type: 'header',\n      text: {\n        type: 'plain_text',\n        text: `${urgency} Tableau PAT 即將到期`,\n        emoji: true\n      }\n    },\n    {\n      type: 'section',\n      fields: [\n        {\n          type: 'mrkdwn',\n          text: `*Token Name:*\\n${config.pat.currentTokenName}`\n        },\n        {\n          type: 'mrkdwn',\n          text: `*剩餘天數:*\\n${config.status.daysRemaining} 天`\n        },\n        {\n          type: 'mrkdwn',\n          text: `*到期日:*\\n${expiresAt.toISOString().slice(0, 10)}`\n        },\n        {\n          type: 'mrkdwn',\n          text: `*檢查時間:*\\n${taiwanTime}`\n        }\n      ]\n    },\n    {\n      type: 'section',\n      text: {\n        type: 'mrkdwn',\n        text: '*📋 請手動執行以下步驟:*\\n1. 登入 <https://prod-apnortheast-a.online.tableau.com|Tableau Cloud>\\n2. 點擊右上角頭像 → *My Account Settings*\\n3. 滾動到 *Personal Access Tokens*\\n4. 點擊 *Create new token*\\n5. 更新 n8n workflow 中的 PAT 設定'\n      }\n    },\n    {\n      type: 'divider'\n    },\n    {\n      type: 'context',\n      elements: [\n        {\n          type: 'mrkdwn',\n          text: '📌 Workflow: *Tableau PAT Reminder* | 下次檢查: 下週一 09:00'\n        }\n      ]\n    }\n  ],\n  text: `${urgency} Tableau PAT 即將到期 - 剩餘 ${config.status.daysRemaining} 天`\n};\n\nreturn { json: { message, config } };"
+      },
+      "id": "prepare-reminder-notification",
+      "name": "Prepare Reminder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare status notification (PAT is still valid)\nconst config = $input.first().json;\nconst now = new Date();\nconst taiwanTime = now.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });\n\nconst expiresAt = new Date(config.status.expiresAt);\nconst statusEmoji = config.status.daysRemaining > 30 ? '✅' : '⚠️';\n\nconst message = {\n  channel: config.slack.channel,\n  blocks: [\n    {\n      type: 'header',\n      text: {\n        type: 'plain_text',\n        text: `${statusEmoji} Tableau PAT 狀態檢查`,\n        emoji: true\n      }\n    },\n    {\n      type: 'section',\n      fields: [\n        {\n          type: 'mrkdwn',\n          text: `*Token Name:*\\n${config.pat.currentTokenName}`\n        },\n        {\n          type: 'mrkdwn',\n          text: `*剩餘天數:*\\n${config.status.daysRemaining} 天`\n        },\n        {\n          type: 'mrkdwn',\n          text: `*到期日:*\\n${expiresAt.toISOString().slice(0, 10)}`\n        },\n        {\n          type: 'mrkdwn',\n          text: `*檢查時間:*\\n${taiwanTime}`\n        }\n      ]\n    },\n    {\n      type: 'context',\n      elements: [\n        {\n          type: 'mrkdwn',\n          text: '📌 Workflow: *Tableau PAT Reminder* | 下次檢查: 下週一 09:00'\n        }\n      ]\n    }\n  ],\n  text: `Tableau PAT 狀態: 剩餘 ${config.status.daysRemaining} 天`\n};\n\nreturn { json: { message, config } };"
+      },
+      "id": "prepare-status-notification",
+      "name": "Prepare Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.message) }}",
+        "options": {}
+      },
+      "id": "send-slack-reminder",
+      "name": "Send Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 100],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "uB8nqjfDBs738eff",
+          "name": "n8n-ops"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.message) }}",
+        "options": {}
+      },
+      "id": "send-slack-status",
+      "name": "Send Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 300],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "uB8nqjfDBs738eff",
+          "name": "n8n-ops"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Weekly Check (Mon 9AM)": {
+      "main": [
+        [
+          {
+            "node": "Load PAT Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load PAT Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load PAT Config": {
+      "main": [
+        [
+          {
+            "node": "Needs Reminder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Reminder?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Reminder": {
+      "main": [
+        [
+          {
+            "node": "Send Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Status": {
+      "main": [
+        [
+          {
+            "node": "Send Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
