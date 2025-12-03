@@ -1,0 +1,123 @@
+{
+  "id": "Btm4SgfrQMAiBYbb",
+  "name": "Gemini 每日彙報檢查自動化",
+  "active": true,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "每日定時觸發",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "10 10 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "set_params",
+      "name": "設定參數",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slack_channel",
+              "name": "slack_channel",
+              "type": "string",
+              "value": "C07KLQ81N2X"
+            },
+            {
+              "id": "expected_reporters",
+              "name": "expected_reporters",
+              "type": "string",
+              "value": "U07KLFYV8M7,U07KLFZ4PDV,U07KMHJ7FE9,U07L2NJKQ1P,U07LB7F3JM4,U07M1NSH7P4,U07MX6U2L45,U07NDCMCWQN,U07S8HQNYUA"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "query_process",
+      "name": "查詢並處理資料",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "jsCode": "// 從前一個節點取得參數\nconst slackChannel = $input.first().json.slack_channel;\nconst expectedReportersStr = $input.first().json.expected_reporters;\nconst expectedReporterIds = expectedReportersStr.split(',');\n\n// 取得今天日期 (台北時區)\nconst today = new Date();\nconst taipeiOffset = 8 * 60; // UTC+8\nconst taipeiTime = new Date(today.getTime() + (taipeiOffset + today.getTimezoneOffset()) * 60000);\nconst year = taipeiTime.getFullYear();\nconst month = String(taipeiTime.getMonth() + 1).padStart(2, '0');\nconst day = String(taipeiTime.getDate()).padStart(2, '0');\nconst todayStr = `${year}-${month}-${day}`;\n\n// 計算搜尋時間範圍 (今天 00:00 到現在)\nconst startOfDay = new Date(taipeiTime);\nstartOfDay.setHours(0, 0, 0, 0);\nconst oldestTimestamp = Math.floor((startOfDay.getTime() - taipeiOffset * 60000) / 1000);\n\n// 使用 Slack API 取得頻道訊息\nconst slackToken = $credentials.slackApi.accessToken;\n\ntry {\n  const response = await fetch(`https://slack.com/api/conversations.history?channel=${slackChannel}&oldest=${oldestTimestamp}&limit=200`, {\n    headers: {\n      'Authorization': `Bearer ${slackToken}`,\n      'Content-Type': 'application/json'\n    }\n  });\n  \n  const data = await response.json();\n  \n  if (!data.ok) {\n    throw new Error(`Slack API error: ${data.error}`);\n  }\n  \n  const messages = data.messages || [];\n  \n  // 找出今天有發送訊息的用戶\n  const reportedUsers = new Set();\n  for (const msg of messages) {\n    if (msg.user) {\n      reportedUsers.add(msg.user);\n    }\n  }\n  \n  // 找出未回報的用戶\n  const missingReporters = expectedReporterIds.filter(id => !reportedUsers.has(id));\n  \n  // 準備輸出\n  const result = {\n    date: todayStr,\n    total_expected: expectedReporterIds.length,\n    total_reported: expectedReporterIds.length - missingReporters.length,\n    missing_count: missingReporters.length,\n    missing_reporters: missingReporters,\n    slack_channel: slackChannel,\n    has_missing: missingReporters.length > 0\n  };\n  \n  return [{ json: result }];\n  \n} catch (error) {\n  return [{\n    json: {\n      error: true,\n      message: error.message,\n      date: todayStr\n    }\n  }];\n}"
+      }
+    },
+    {
+      "id": "send_notification",
+      "name": "發送通知",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [850, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "slack_credential_id",
+          "name": "Slack API"
+        }
+      },
+      "parameters": {
+        "operation": "post",
+        "channel": "={{ $json.slack_channel }}",
+        "text": "=📊 *Gemini 每日彙報檢查* - {{ $json.date }}\n\n{{ $json.has_missing ? '⚠️ 以下同仁尚未提交彙報：\\n' + $json.missing_reporters.map(id => '<@' + id + '>').join('\\n') + '\\n\\n請記得提交您的每日彙報！' : '✅ 所有同仁已完成今日彙報！' }}\n\n📈 統計：{{ $json.total_reported }}/{{ $json.total_expected }} 人已回報"
+      }
+    }
+  ],
+  "connections": {
+    "每日定時觸發": {
+      "main": [
+        [
+          {
+            "node": "設定參數",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "設定參數": {
+      "main": [
+        [
+          {
+            "node": "查詢並處理資料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查詢並處理資料": {
+      "main": [
+        [
+          {
+            "node": "發送通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Asia/Taipei",
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "ftgaming-n8n",
+    "version": 27,
+    "lastUpdated": "2024-12-03",
+    "description": "每週一至週五 10:10 AM (台北時間) 自動檢查 Slack 頻道，確認 9 位同仁是否已提交每日彙報"
+  }
+}
