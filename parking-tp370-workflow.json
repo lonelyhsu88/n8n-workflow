@@ -1,0 +1,244 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "name": "定時觸發(06:00)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        64
+      ],
+      "id": "228ece6b-985f-4fb6-8de0-b0e8953d2d89"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.dodohome.com.tw/p2_parklist.aspx/SearchDetail",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"park_id\": \"TP370\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "API請求",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        64,
+        64
+      ],
+      "id": "4dc1ba03-65f4-426d-8b24-218f2fe9a582",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "condition-check",
+              "leftValue": "={{ $json.d ? true : false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "檢查API狀態",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        288,
+        64
+      ],
+      "id": "fe4a106b-fbd5-4dd3-bc63-72cf5680c588"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst data = item.json;\n\nconst parkId = 'TP370';\nconst parkName = data.d && data.d.length > 0 ? data.d[1] : '未知停車場';\nconst parkUrl = 'https://www.dodohome.com.tw/p2_parkdetail.aspx?park_id=' + parkId;\nconst operatingHours = data.d && data.d.length > 0 ? data.d[4] : '未知';\n\n// HTML 清理\nfunction cleanHtml(text) {\n  if (!text) return '';\n  return text.replace(/&nbsp;?/g, ' ').replace(/&amp;/g, '&').replace(/\\s+/g, ' ').trim();\n}\n\n// 解析日期 MM/DD\nfunction parseDate(dateStr, year) {\n  const parts = dateStr.trim().split('/');\n  if (parts.length === 2) {\n    const month = parseInt(parts[0]) - 1;\n    const day = parseInt(parts[1]);\n    return new Date(year, month, day);\n  }\n  return null;\n}\n\n// 檢查日期是否在範圍內\nfunction isDateInRange(checkDate, startStr, endStr, year) {\n  const start = parseDate(startStr, year);\n  const end = parseDate(endStr, year);\n  if (!start || !end) return false;\n  const check = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());\n  return check >= start && check <= end;\n}\n\n// 取得費率資訊\nlet feeText = '';\nif (data.d && data.d.length > 8) {\n  feeText = cleanHtml(data.d[8]);\n}\n\nconsole.log('費率原文:', feeText);\n\n// 取得當前日期 (Asia/Taipei)\nconst now = new Date();\nconst taipeiOffset = 8 * 60; // UTC+8\nconst localOffset = now.getTimezoneOffset();\nconst taipeiTime = new Date(now.getTime() + (taipeiOffset + localOffset) * 60000);\nconst year = taipeiTime.getFullYear();\nconst month = taipeiTime.getMonth() + 1;\nconst day = taipeiTime.getDate();\n\nconsole.log('當前日期:', month + '/' + day + '/' + year);\n\n// 預設費率\nlet currentRate = 50;\nlet currentLimit = 300;\nlet rateType = '標準費率';\nlet noLimit = false;\n\n// 解析標準費率\nconst stdRateMatch = feeText.match(/臨停[：:]?\\s*\\$?(\\d+)\\/H/);\nif (stdRateMatch) currentRate = parseInt(stdRateMatch[1]);\n\nconst stdLimitMatch = feeText.match(/當日當次最高上限\\$?(\\d+)/);\nif (stdLimitMatch) currentLimit = parseInt(stdLimitMatch[1]);\n\n// 解析展期費率 - 支援多個展期\nconst exhibitionPattern = /(\\d{1,2}\\/\\d{1,2})[~～-](\\d{1,2}\\/\\d{1,2})展期費率[：:]\\s*\\$?(\\d+)\\/H[，,]?(當日當次最高上限\\$?(\\d+)|無最高上限)?/g;\nlet match;\n\nwhile ((match = exhibitionPattern.exec(feeText)) !== null) {\n  const startDate = match[1];\n  const endDate = match[2];\n  const rate = parseInt(match[3]);\n  const hasNoLimit = match[0].includes('無最高上限');\n  const limit = match[5] ? parseInt(match[5]) : null;\n  \n  console.log('找到展期:', startDate + '~' + endDate, '費率:' + rate, '上限:' + (hasNoLimit ? '無上限' : limit));\n  \n  // 檢查今天是否在此展期內\n  if (isDateInRange(taipeiTime, startDate, endDate, year)) {\n    currentRate = rate;\n    if (hasNoLimit) {\n      noLimit = true;\n      currentLimit = null;\n    } else if (limit) {\n      currentLimit = limit;\n      noLimit = false;\n    }\n    rateType = '展期費率 (' + startDate + '~' + endDate + ')';\n    console.log('✅ 今天在展期內，使用展期費率');\n    break;\n  }\n}\n\nconsole.log('最終費率:', currentRate, '上限:', noLimit ? '無上限' : currentLimit, '類型:', rateType);\n\n// 格式化時間\nconst timeStr = new Intl.DateTimeFormat('zh-TW', {\n  timeZone: 'Asia/Taipei',\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  hour: '2-digit', minute: '2-digit', second: '2-digit',\n  hour12: false\n}).format(now);\n\n// 生成訊息\nconst limitText = noLimit ? '無上限' : ('$' + currentLimit);\nconst messageText = \n  '🏞️ 停車場: ' + parkName + '\\n' +\n  '🕒 營業時間: ' + operatingHours + '\\n' +\n  '💰 當前收費: $' + currentRate + '/H\\n' +\n  '📊 當日上限: ' + limitText + '\\n' +\n  '📋 費率類型: ' + rateType + '\\n' +\n  '🌐 查看詳情: ' + parkUrl + '\\n' +\n  '⏰ 檢查時間: ' + timeStr;\n\nreturn [{ json: { text: messageText } }];"
+      },
+      "name": "解析費率",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -64
+      ],
+      "id": "dd0a3c4a-c9fc-4c27-bea6-96bb27336c9a"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U07F9203EP8",
+          "mode": "list",
+          "cachedResultName": "lonely.h"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "name": "Slack通知",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        -64
+      ],
+      "id": "70842313-d217-4aca-ad3e-4d50afeda4f9",
+      "webhookId": "2f781d8f-aa6f-4b2d-8dff-3d8cb02250b4",
+      "credentials": {
+        "slackApi": {
+          "id": "UfdPURfRn78d2HjH",
+          "name": "n8n-ops"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst response = item.json;\n\nconst now = new Date();\nconst timeStr = new Intl.DateTimeFormat('zh-TW', {\n  timeZone: 'Asia/Taipei',\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  hour: '2-digit', minute: '2-digit', second: '2-digit',\n  hour12: false\n}).format(now);\n\nconst errorMessage = response.error?.message || response.message || 'API 回應無效或無資料';\nconst errorCode = response.error?.code || response.code || 'N/A';\n\nconst errorText = \n  '❌ *嘟嘟房 API 監控異常*\\n\\n' +\n  '🔴 狀態: 請求失敗\\n' +\n  '⚠️ 錯誤代碼: ' + errorCode + '\\n' +\n  '📝 錯誤訊息: ' + errorMessage + '\\n' +\n  '🌐 API: dodohome.com.tw\\n' +\n  '🅿️ 停車場: TP370 (南港軟體園區站)\\n' +\n  '⏰ 發生時間: ' + timeStr + '\\n\\n' +\n  '請檢查 API 服務狀態';\n\nreturn [{ json: { text: errorText } }];"
+      },
+      "name": "錯誤訊息處理",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        192
+      ],
+      "id": "9dcb35c2-dfdc-4d2e-a815-bac9a183c84e"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U07F9203EP8",
+          "mode": "list",
+          "cachedResultName": "lonely.h"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "name": "Slack錯誤通知",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        192
+      ],
+      "id": "2f9cf526-f780-4a90-99ad-6b6f035d8680",
+      "webhookId": "6eb78ca8-3aeb-469e-8b97-79a30f33cf88",
+      "credentials": {
+        "slackApi": {
+          "id": "UfdPURfRn78d2HjH",
+          "name": "n8n-ops"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "定時觸發(06:00)": {
+      "main": [
+        [
+          {
+            "node": "API請求",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API請求": {
+      "main": [
+        [
+          {
+            "node": "檢查API狀態",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "錯誤訊息處理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "檢查API狀態": {
+      "main": [
+        [
+          {
+            "node": "解析費率",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "錯誤訊息處理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析費率": {
+      "main": [
+        [
+          {
+            "node": "Slack通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "錯誤訊息處理": {
+      "main": [
+        [
+          {
+            "node": "Slack錯誤通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "baf9ef3389ae9954a59e5ee8a681df3c34a6de0fdb1ec09145b5fdd99e4ef636"
+  }
+}
