@@ -27,19 +27,33 @@ if (pattern3.test(code)) {
   console.log('✓ 移除 pmRyanFinalCategory 區塊');
 }
 
-// 驗證
-const hasDebugUserId = code.includes('DEBUG_USER_ID');
-console.log('\n驗證結果:', hasDebugUserId ? '❌ 還有殘留' : '✅ 已完全移除');
+// 4. Line 336-343: 移除 isPMRyanMessage debug 區塊
+const pattern4 = /\s*\/\/ 🔍 特別追蹤 PM-Ryan 的訊息\n\s+if \(isPMRyanMessage\) \{[\s\S]*?\n\s+\}\n/;
+if (pattern4.test(code)) {
+  code = code.replace(pattern4, '');
+  console.log('✓ 移除 isPMRyanMessage debug 區塊');
+}
 
-if (hasDebugUserId) {
+// 驗證所有 debug 變數
+const debugVars = ['DEBUG_USER_ID', 'isPMRyanMessage', 'inChannelSet', 'pmRyanTrackable', 'pmRyanAttendanceMessages', 'pmRyanFinalCategory', 'pmRyanLeaveDebug'];
+const remainingVars = debugVars.filter(v => code.includes(v));
+
+console.log('\n=== 驗證結果 ===');
+if (remainingVars.length > 0) {
+  console.log('❌ 還有殘留:', remainingVars.join(', '));
+
   const lines = code.split('\n');
   console.log('\n殘留位置:');
-  lines.forEach((line, i) => {
-    if (line.includes('DEBUG_USER_ID')) {
-      console.log(`Line ${i + 1}: ${line.trim()}`);
-    }
+  remainingVars.forEach(varName => {
+    lines.forEach((line, i) => {
+      if (line.includes(varName)) {
+        console.log(`  ${varName} at Line ${i + 1}: ${line.trim()}`);
+      }
+    });
   });
 } else {
+  console.log('✅ 已完全移除所有 debug 變數');
+
   // 更新並寫入
   dataNode.parameters.jsCode = code;
   fs.writeFileSync('TP370-daily-report-checker-FINAL-FIXED.json', JSON.stringify(workflow, null, 2), 'utf8');
