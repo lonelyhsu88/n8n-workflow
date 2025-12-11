@@ -18,6 +18,10 @@ import requests
 import sys
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+# 載入 .env 檔案中的環境變數
+load_dotenv()
 
 # ==================== 配置 ====================
 
@@ -96,6 +100,56 @@ def download_report_image(token):
     return None
 
 
+def send_slack_notification(image_path):
+    """發送 Slack 通知"""
+    slack_token = os.environ.get("SLACK_USER_TOKEN")
+    if not slack_token:
+        print("⚠️  未設定 SLACK_USER_TOKEN，跳過 Slack 通知")
+        return False
+
+    channel_id = "C07KQTH9F1T"  # #ops-test
+    date_str = datetime.now().strftime("%Y/%m/%d")
+
+    message = f"""📊 *Gemini Daily Report 已下載完成* ({date_str})
+
+✅ 報表圖片已成功下載
+📂 檔案路徑: `{image_path}`
+
+🔔 請 <@U07F9203EP8> 在 Claude Code 中執行分析：
+```
+請分析 {image_path} 並發送分析結果到 #ops-test
+```
+
+---
+🤖 _自動化通知 by analyze_report.py_"""
+
+    try:
+        url = 'https://slack.com/api/chat.postMessage'
+        payload = {
+            'channel': channel_id,
+            'text': message,
+            'mrkdwn': True
+        }
+        headers = {
+            'Authorization': f'Bearer {slack_token}',
+            'Content-Type': 'application/json'
+        }
+
+        print("📤 發送通知到 Slack #ops-test...")
+        response = requests.post(url, json=payload, headers=headers)
+        result = response.json()
+
+        if result.get('ok'):
+            print("   ✅ Slack 通知已發送")
+            return True
+        else:
+            print(f"   ⚠️  Slack 通知失敗: {result.get('error')}")
+            return False
+    except Exception as e:
+        print(f"   ⚠️  Slack 通知錯誤: {e}")
+        return False
+
+
 def main():
     """主程式"""
     print("=" * 60)
@@ -130,15 +184,18 @@ def main():
         f.write(image_data)
     print(f"💾 圖片已儲存: {image_path}")
 
-    # Step 4: 提示下一步
+    # Step 4: 發送 Slack 通知
+    print()
+    send_slack_notification(image_path)
+
+    # Step 5: 完成
     print()
     print("=" * 60)
     print("✅ 圖片下載完成！")
     print("=" * 60)
     print()
-    print("📌 下一步：在 Claude Code 中輸入以下指令：")
-    print()
-    print(f"   請分析 {image_path} 並發送到 Slack #ops-test")
+    print("💡 已發送通知到 Slack #ops-test")
+    print("   等待手動分析...")
     print()
     print("=" * 60)
 

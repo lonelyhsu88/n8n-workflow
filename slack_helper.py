@@ -14,7 +14,11 @@ import sys
 import os
 from datetime import datetime, timedelta
 import warnings
+from dotenv import load_dotenv
 warnings.filterwarnings('ignore', message='Unverified HTTPS request')
+
+# 載入 .env 檔案中的環境變數
+load_dotenv()
 
 # 配置 - 從環境變數讀取敏感資訊
 SLACK_TOKEN = os.environ.get("SLACK_USER_TOKEN") or os.environ.get("SLACK_TOKEN")
