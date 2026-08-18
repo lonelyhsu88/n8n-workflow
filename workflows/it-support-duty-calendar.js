@@ -55,9 +55,9 @@ const targetDateStr =
 const targetMs = Date.parse(`${targetDateStr}T00:00:00Z`);
 const horizonMs = targetMs + 30 * DAY_MS; // 週期展開只需算到目標日之後一點
 const targetDate = new Date(targetMs);
-const todayDisplay = `${targetDate.getUTCMonth() + 1}/${targetDate.getUTCDate()} ${
+const todayDisplay = `${targetDate.getUTCMonth() + 1}/${targetDate.getUTCDate()} (${
   WEEKDAY_LABELS[targetDate.getUTCDay()]
-}`;
+})`;
 
 console.log(`=== IT Support 值班表（ICS）===`);
 console.log(`目標日期(台北): ${targetDateStr} (${todayDisplay})`);
@@ -226,33 +226,24 @@ dutyGroups.forEach((g) => console.log(`  [${g.tag}] ${g.people.join(', ')}`));
 if (missingTags.length) console.log(`⚠️ 未排班的 tag: ${missingTags.join(', ')}`);
 
 // ── 組 Slack 訊息 ────────────────────────────────────────────
-const SEPARATOR = '━━━━━━━━━━━━━━━━━━━━━━━━';
 const CALENDAR_LINK = `:link: <${CALENDAR_URL}|IT Support 值班表>`;
 
 let slackMessage;
 if (dutyCount > 0) {
-  // 名單用 ``` 等寬區塊：Slack 的粗體與 emoji 是比例字寬，空白補齊在正常字型下對不齊
-  const tagWidth = Math.max(...TAG_WHITELIST.map((t) => t.length));
   const roster = TAG_WHITELIST.map((t) => {
     const people = groups.get(t);
-    return `${t.padEnd(tagWidth)} ｜ ${people.length ? people.join(', ') : '(未排班)'}`;
-  }).join('\n');
+    return `:bust_in_silhouette: *${t}* — ${people.length ? people.join(', ') : '(未排班)'}`;
+  });
 
-  slackMessage = [
-    `:date: *${todayDisplay}* ｜ IT Support 值班`,
-    SEPARATOR,
-    `:busts_in_silhouette: *今日值班人員* ｜ ${dutyCount} 人`,
-    '```',
-    roster,
-    '```',
-    CALENDAR_LINK,
-  ].join('\n');
+  slackMessage = [`:date: *${todayDisplay}* ｜ IT Support 值班`, '', ...roster, '', CALENDAR_LINK].join(
+    '\n'
+  );
 } else {
   slackMessage = [
-    `:warning: *今日(${todayDisplay})IT Support 值班人員* ｜ 未排班`,
-    SEPARATOR,
+    `:warning: *${todayDisplay}* ｜ IT Support 值班 — 未排班`,
+    '',
     `查無 ${TAG_WHITELIST.join(' / ')} 的值班事件，請檢查日曆排程。`,
-    SEPARATOR,
+    '',
     CALENDAR_LINK,
   ].join('\n');
 }
