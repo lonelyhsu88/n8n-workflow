@@ -1,0 +1,131 @@
+{
+  "name": "(09:00)_IT-Support值班人員",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "每天早上九點觸發",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://calendar.google.com/calendar/ical/jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc%40group.calendar.google.com/public/basic.ics",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "抓取IT-Support日曆(ICS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * IT Support 值班表通知 — n8n Code 節點（Mode: Run Once for All Items）\n *\n * 資料來源：Google Calendar「IT Support (on Call)」公開 ICS（無需 Google 憑證）\n *   https://calendar.google.com/calendar/ical/jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc%40group.calendar.google.com/public/basic.ics\n *\n * 上游節點：HTTP Request（Response Format = Text，輸出欄位為 data）\n * 下游節點：Slack（text = {{ $json.slackMessage }}）\n *\n * 只輸出 TAG_WHITELIST 內的 tag，其餘（FA / FB / FCQA / FG / 鬥雞 / OP-OnCall / 無 tag）忽略。\n *\n * ICS 需處理的特性（依實際日曆內容確認）：\n *   - 全部為 all-day 事件，DTEND 為排他（exclusive）\n *   - RRULE 僅 FREQ=WEEKLY，帶 INTERVAL / COUNT / UNTIL / 單一 BYDAY\n *   - EXDATE 排除特定日期\n *   - RECURRENCE-ID 單次覆寫（同 UID 另一個 VEVENT）\n */\n\nconst TAG_WHITELIST = ['ND', 'FC', 'FP'];\nconst TAG_ICONS = { ND: '🟦', FC: '🟨', FP: '🟩' };\nconst CALENDAR_URL =\n  'https://calendar.google.com/calendar/u/0/embed?src=jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc@group.calendar.google.com&ctz=Asia/Taipei';\n\nconst DAY_MS = 86400000;\nconst WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];\nconst WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];\nconst MAX_OCCURRENCES = 2000; // 無 UNTIL/COUNT 的無限系列安全上限\n\n// ── 取得 ICS 原文 ─────────────────────────────────────────────\nconst inputJson = $input.first().json;\nconst icsRaw =\n  typeof inputJson.data === 'string'\n    ? inputJson.data\n    : typeof inputJson.body === 'string'\n      ? inputJson.body\n      : null;\n\nif (!icsRaw || icsRaw.indexOf('BEGIN:VCALENDAR') === -1) {\n  throw new Error(\n    'ICS 內容讀取失敗：請確認 HTTP Request 節點的 Response Format 設為 Text（欄位 data）。' +\n      `實際收到的 keys: ${Object.keys(inputJson).join(', ') || '(empty)'}`\n  );\n}\n\n// ── 目標日期（台北時區；可用 targetDate 覆寫以便測試）────────────\nconst targetDateStr =\n  typeof inputJson.targetDate === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(inputJson.targetDate)\n    ? inputJson.targetDate\n    : new Intl.DateTimeFormat('en-CA', {\n        timeZone: 'Asia/Taipei',\n        year: 'numeric',\n        month: '2-digit',\n        day: '2-digit',\n      }).format(new Date());\n\nconst targetMs = Date.parse(`${targetDateStr}T00:00:00Z`);\nconst horizonMs = targetMs + 30 * DAY_MS; // 週期展開只需算到目標日之後一點\nconst targetDate = new Date(targetMs);\nconst todayDisplay = `${targetDate.getUTCMonth() + 1}/${targetDate.getUTCDate()} ${\n  WEEKDAY_LABELS[targetDate.getUTCDay()]\n}`;\n\nconsole.log(`=== IT Support 值班表（ICS）===`);\nconsole.log(`目標日期(台北): ${targetDateStr} (${todayDisplay})`);\n\n// ── ICS 解析工具 ──────────────────────────────────────────────\n// RFC 5545 unfolding：換行後接空白/tab 代表續行\nconst icsText = icsRaw.replace(/\\r\\n/g, '\\n').replace(/\\n[ \\t]/g, '');\n\nconst getProp = (block, name) => {\n  const m = block.match(new RegExp(`^${name}(?:;[^:\\\\n]*)?:(.*)$`, 'm'));\n  return m ? m[1].trim() : null;\n};\n\nconst getAllProps = (block, name) => {\n  const re = new RegExp(`^${name}(?:;[^:\\\\n]*)?:(.*)$`, 'gm');\n  const out = [];\n  let m;\n  while ((m = re.exec(block)) !== null) out.push(m[1].trim());\n  return out;\n};\n\n/** 'YYYYMMDD' 或 'YYYYMMDDTHHMMSSZ' → UTC 午夜 ms */\nconst toDayMs = (value) => {\n  if (!value) return null;\n  const d = value.trim().slice(0, 8);\n  if (!/^\\d{8}$/.test(d)) return null;\n  return Date.UTC(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8)));\n};\n\n/** ms → 'YYYYMMDD'，用於 RECURRENCE-ID / EXDATE 比對 */\nconst toDayKey = (ms) => new Date(ms).toISOString().slice(0, 10).replace(/-/g, '');\n\nconst parseSummary = (summary) => {\n  const m = (summary || '').match(/^\\s*\\[([^\\]]+)\\]\\s*(.*)$/);\n  return {\n    tag: m ? m[1].trim().toUpperCase() : '',\n    person: m ? m[2].trim() : (summary || '').trim(),\n  };\n};\n\n// ── 切出 VEVENT，分離「主事件」與「單次覆寫」────────────────────\nconst blocks = icsText\n  .split('BEGIN:VEVENT')\n  .slice(1)\n  .map((b) => b.split('END:VEVENT')[0]);\n\nconst masters = [];\nconst overrideKeys = new Set(); // `${uid}|${YYYYMMDD}`\nconst overrideBlocks = [];\n\nfor (const block of blocks) {\n  const recurrenceId = getProp(block, 'RECURRENCE-ID');\n  if (recurrenceId) {\n    const uid = getProp(block, 'UID') || '';\n    const key = `${uid}|${toDayKey(toDayMs(recurrenceId))}`;\n    overrideKeys.add(key);\n    overrideBlocks.push(block);\n  } else {\n    masters.push(block);\n  }\n}\n\nconsole.log(`VEVENT 總數: ${blocks.length}（主事件 ${masters.length} / 單次覆寫 ${overrideBlocks.length}）`);\n\n// ── 展開為「涵蓋目標日」的值班區間 ─────────────────────────────\nconst occurrences = [];\n\nconst pushIfCoversTarget = (summary, startMs, endMs) => {\n  if (startMs === null || startMs > targetMs) return;\n  const end = endMs !== null && endMs > startMs ? endMs : startMs + DAY_MS; // DTEND 排他，缺值視為 1 天\n  if (targetMs >= end) return;\n  const { tag, person } = parseSummary(summary);\n  if (!TAG_WHITELIST.includes(tag) || !person) return;\n  occurrences.push({ tag, person, summary, start: toDayKey(startMs), end: toDayKey(end) });\n};\n\nfor (const block of masters) {\n  const summary = getProp(block, 'SUMMARY');\n  const startMs = toDayMs(getProp(block, 'DTSTART'));\n  const endMs = toDayMs(getProp(block, 'DTEND'));\n  if (!summary || startMs === null) continue;\n\n  const rruleRaw = getProp(block, 'RRULE');\n  if (!rruleRaw) {\n    pushIfCoversTarget(summary, startMs, endMs);\n    continue;\n  }\n\n  const rule = {};\n  for (const part of rruleRaw.split(';')) {\n    const [k, v] = part.split('=');\n    if (k) rule[k.toUpperCase()] = v;\n  }\n\n  if (rule.FREQ !== 'WEEKLY') {\n    // 此日曆目前只有 WEEKLY；其他頻率退化為單次，避免靜默漏資料\n    console.log(`⚠️ 未支援的 RRULE FREQ=${rule.FREQ}，以單次事件處理: ${summary}`);\n    pushIfCoversTarget(summary, startMs, endMs);\n    continue;\n  }\n\n  const interval = Math.max(1, parseInt(rule.INTERVAL || '1', 10) || 1);\n  const count = rule.COUNT ? parseInt(rule.COUNT, 10) : null;\n  const untilMs = rule.UNTIL ? toDayMs(rule.UNTIL) : null;\n  const byDay = rule.BYDAY ? rule.BYDAY.split(',').map((d) => d.trim().toUpperCase()) : null;\n  const durationMs = endMs !== null && endMs > startMs ? endMs - startMs : DAY_MS;\n\n  const exDates = new Set();\n  for (const line of getAllProps(block, 'EXDATE')) {\n    for (const v of line.split(',')) {\n      const ms = toDayMs(v);\n      if (ms !== null) exDates.add(toDayKey(ms));\n    }\n  }\n\n  const uid = getProp(block, 'UID') || '';\n  let emitted = 0;\n  for (let i = 0; i < MAX_OCCURRENCES; i++) {\n    const occStart = startMs + i * interval * 7 * DAY_MS;\n    if (occStart > horizonMs) break;\n    if (untilMs !== null && occStart > untilMs) break;\n    if (byDay && !byDay.includes(WEEKDAY_CODES[new Date(occStart).getUTCDay()])) continue;\n\n    emitted++;\n    if (count !== null && emitted > count) break;\n\n    const dayKey = toDayKey(occStart);\n    if (exDates.has(dayKey)) continue; // EXDATE 排除\n    if (overrideKeys.has(`${uid}|${dayKey}`)) continue; // 由覆寫事件提供實際日期\n\n    pushIfCoversTarget(summary, occStart, occStart + durationMs);\n  }\n}\n\nfor (const block of overrideBlocks) {\n  if ((getProp(block, 'STATUS') || '').toUpperCase() === 'CANCELLED') continue;\n  pushIfCoversTarget(\n    getProp(block, 'SUMMARY'),\n    toDayMs(getProp(block, 'DTSTART')),\n    toDayMs(getProp(block, 'DTEND'))\n  );\n}\n\n// ── 依 tag 分組（去重）───────────────────────────────────────\nconst seen = new Set();\nconst groups = new Map(TAG_WHITELIST.map((t) => [t, []]));\nfor (const occ of occurrences) {\n  const key = `${occ.tag}|${occ.person}`;\n  if (seen.has(key)) continue;\n  seen.add(key);\n  groups.get(occ.tag).push(occ.person);\n}\n\nconst dutyGroups = TAG_WHITELIST.filter((t) => groups.get(t).length > 0).map((t) => ({\n  tag: t,\n  people: groups.get(t),\n}));\nconst dutyCount = dutyGroups.reduce((sum, g) => sum + g.people.length, 0);\nconst missingTags = TAG_WHITELIST.filter((t) => groups.get(t).length === 0);\n\nconsole.log(`命中值班區間: ${occurrences.length} 筆 → 值班人數 ${dutyCount}`);\ndutyGroups.forEach((g) => console.log(`  [${g.tag}] ${g.people.join(', ')}`));\nif (missingTags.length) console.log(`⚠️ 未排班的 tag: ${missingTags.join(', ')}`);\n\n// ── 組 Slack 訊息 ────────────────────────────────────────────\nconst SEPARATOR = '━━━━━━━━━━━━━━━━━━━━━━━━';\nconst CALENDAR_LINK = `:link: <${CALENDAR_URL}|IT Support 值班表>`;\n\nlet slackMessage;\nif (dutyCount > 0) {\n  const lines = dutyGroups.map((g, index) => {\n    const prefix = index === dutyGroups.length - 1 && missingTags.length === 0 ? '└─' : '├─';\n    return `${prefix} ${TAG_ICONS[g.tag] || '📋'} *${g.tag}* ｜ ${g.people.join(', ')}`;\n  });\n  if (missingTags.length) {\n    lines.push(`└─ :warning: 未排班 ｜ ${missingTags.join(', ')}`);\n  }\n  slackMessage = [\n    `:date: *${todayDisplay}* ｜ IT Support 值班`,\n    SEPARATOR,\n    `:busts_in_silhouette: *今日值班人員* ｜ ${dutyCount} 人`,\n    ...lines,\n    SEPARATOR,\n    CALENDAR_LINK,\n  ].join('\\n');\n} else {\n  slackMessage = [\n    `:warning: *今日(${todayDisplay})IT Support 值班人員* ｜ 未排班`,\n    SEPARATOR,\n    `查無 ${TAG_WHITELIST.join(' / ')} 的值班事件，請檢查日曆排程。`,\n    SEPARATOR,\n    CALENDAR_LINK,\n  ].join('\\n');\n}\n\nreturn [\n  {\n    json: {\n      targetDate: targetDateStr,\n      todayDisplay,\n      dutyCount,\n      hasDuty: dutyCount > 0,\n      dutyGroups,\n      missingTags,\n      matchedEvents: occurrences,\n      slackMessage,\n    },\n  },\n];\n"
+      },
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "解析值班人員(ND/FC/FP)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U07F9203EP8",
+          "mode": "list",
+          "cachedResultName": "lonely.h"
+        },
+        "text": "={{ $json.slackMessage }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "a1000000-0000-4000-8000-000000000004",
+      "name": "lonely.h",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        0
+      ],
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "uB8nqjfDBs738eff",
+          "name": "n8n-ops"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "每天早上九點觸發": {
+      "main": [
+        [
+          {
+            "node": "抓取IT-Support日曆(ICS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "抓取IT-Support日曆(ICS)": {
+      "main": [
+        [
+          {
+            "node": "解析值班人員(ND/FC/FP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析值班人員(ND/FC/FP)": {
+      "main": [
+        [
+          {
+            "node": "lonely.h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Taipei"
+  }
+}
