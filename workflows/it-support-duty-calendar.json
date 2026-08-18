@@ -72,12 +72,12 @@
     },
     {
       "parameters": {
-        "select": "user",
-        "user": {
+        "select": "channel",
+        "channelId": {
           "__rl": true,
-          "value": "U07F9203EP8",
+          "value": "C09D9EKF615",
           "mode": "list",
-          "cachedResultName": "lonely.h"
+          "cachedResultName": "node-rd需求溝通處理群"
         },
         "text": "={{ $json.slackMessage }}",
         "otherOptions": {
@@ -88,7 +88,7 @@
         }
       },
       "id": "a1000000-0000-4000-8000-000000000004",
-      "name": "lonely.h",
+      "name": "node-rd需求溝通處理群",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.1,
       "position": [
@@ -130,7 +130,7 @@
       "main": [
         [
           {
-            "node": "lonely.h",
+            "node": "node-rd需求溝通處理群",
             "type": "main",
             "index": 0
           }
