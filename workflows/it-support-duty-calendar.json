@@ -60,7 +60,6 @@
     },
     {
       "parameters": {
-        "authentication": "oAuth2",
         "select": "user",
         "user": {
           "__rl": true,
@@ -82,9 +81,9 @@
         0
       ],
       "credentials": {
-        "slackOAuth2Api": {
-          "id": "uB8nqjfDBs738eff",
-          "name": "n8n-ops"
+        "slackApi": {
+          "id": "A5PaB7aCkdXW3IVn",
+          "name": "n8n-ops Slack"
         }
       }
     }
