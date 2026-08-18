@@ -17,7 +17,6 @@
  */
 
 const TAG_WHITELIST = ['ND', 'FC', 'FP'];
-const TAG_ICONS = { ND: '🟦', FC: '🟨', FP: '🟩' };
 const CALENDAR_URL =
   'https://calendar.google.com/calendar/u/0/embed?src=jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc@group.calendar.google.com&ctz=Asia/Taipei';
 
@@ -91,11 +90,14 @@ const toDayMs = (value) => {
 /** ms → 'YYYYMMDD'，用於 RECURRENCE-ID / EXDATE 比對 */
 const toDayKey = (ms) => new Date(ms).toISOString().slice(0, 10).replace(/-/g, '');
 
+/** 日曆標題常在人名前掛 emoji（[FC] 😼 Hector / [FA] 🎰 Wonton），只留人名 */
+const stripLeadingSymbols = (name) => name.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+
 const parseSummary = (summary) => {
   const m = (summary || '').match(/^\s*\[([^\]]+)\]\s*(.*)$/);
   return {
     tag: m ? m[1].trim().toUpperCase() : '',
-    person: m ? m[2].trim() : (summary || '').trim(),
+    person: stripLeadingSymbols(m ? m[2] : summary || ''),
   };
 };
 
@@ -229,19 +231,20 @@ const CALENDAR_LINK = `:link: <${CALENDAR_URL}|IT Support 值班表>`;
 
 let slackMessage;
 if (dutyCount > 0) {
-  const lines = dutyGroups.map((g, index) => {
-    const prefix = index === dutyGroups.length - 1 && missingTags.length === 0 ? '└─' : '├─';
-    return `${prefix} ${TAG_ICONS[g.tag] || '📋'} *${g.tag}* ｜ ${g.people.join(', ')}`;
-  });
-  if (missingTags.length) {
-    lines.push(`└─ :warning: 未排班 ｜ ${missingTags.join(', ')}`);
-  }
+  // 名單用 ``` 等寬區塊：Slack 的粗體與 emoji 是比例字寬，空白補齊在正常字型下對不齊
+  const tagWidth = Math.max(...TAG_WHITELIST.map((t) => t.length));
+  const roster = TAG_WHITELIST.map((t) => {
+    const people = groups.get(t);
+    return `${t.padEnd(tagWidth)} ｜ ${people.length ? people.join(', ') : '(未排班)'}`;
+  }).join('\n');
+
   slackMessage = [
     `:date: *${todayDisplay}* ｜ IT Support 值班`,
     SEPARATOR,
     `:busts_in_silhouette: *今日值班人員* ｜ ${dutyCount} 人`,
-    ...lines,
-    SEPARATOR,
+    '```',
+    roster,
+    '```',
     CALENDAR_LINK,
   ].join('\n');
 } else {

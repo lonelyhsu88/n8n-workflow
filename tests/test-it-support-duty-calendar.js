@@ -17,11 +17,12 @@ const ICS_URL =
   'https://calendar.google.com/calendar/ical/jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc%40group.calendar.google.com/public/basic.ics';
 
 // 期望值來源：Google Calendar 週檢視畫面（2026-07-27 為使用者提供的截圖）
+// 期望值不含日曆標題上的 emoji（[FC] 😼 Hector → Hector）
 const CASES = [
-  { date: '2026-07-27', expect: { ND: 'Wayne', FC: '😼 Henry', FP: 'Stephanie' } },
-  { date: '2026-07-20', expect: { ND: 'K11', FC: '😼 Ziv', FP: 'Bruce' } },
-  { date: '2026-07-25', expect: { ND: 'K11', FC: '😼 Ziv', FP: 'Stephanie' } },
-  { date: '2026-08-18', expect: { ND: 'Wayne', FC: '😼 Hector', FP: 'Ricky' } },
+  { date: '2026-07-27', expect: { ND: 'Wayne', FC: 'Henry', FP: 'Stephanie' } },
+  { date: '2026-07-20', expect: { ND: 'K11', FC: 'Ziv', FP: 'Bruce' } },
+  { date: '2026-07-25', expect: { ND: 'K11', FC: 'Ziv', FP: 'Stephanie' } },
+  { date: '2026-08-18', expect: { ND: 'Wayne', FC: 'Hector', FP: 'Ricky' } },
 ];
 
 function fetchIcs() {
