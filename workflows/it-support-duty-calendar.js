@@ -7,7 +7,7 @@
  * 上游節點：HTTP Request（Response Format = Text，輸出欄位為 data）
  * 下游節點：Slack（text = {{ $json.slackMessage }}）
  *
- * 只輸出 TAG_WHITELIST 內的 tag，其餘（FC / FA / FB / FCQA / FG / 鬥雞 / OP-OnCall / 無 tag）忽略。
+ * 只輸出 TAG_WHITELIST 內的 tag，其餘（FP / FA / FB / FCQA / FG / 鬥雞 / OP-OnCall / 無 tag）忽略。
  *
  * ICS 需處理的特性（依實際日曆內容確認）：
  *   - 全部為 all-day 事件，DTEND 為排他（exclusive）
@@ -16,7 +16,7 @@
  *   - RECURRENCE-ID 單次覆寫（同 UID 另一個 VEVENT）
  */
 
-const TAG_WHITELIST = ['ND', 'FP'];
+const TAG_WHITELIST = ['ND', 'FC'];
 const CALENDAR_URL =
   'https://calendar.google.com/calendar/u/0/embed?src=jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc@group.calendar.google.com&ctz=Asia/Taipei';
 
