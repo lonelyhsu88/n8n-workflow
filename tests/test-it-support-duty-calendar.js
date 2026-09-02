@@ -16,13 +16,14 @@ const CODE_PATH = path.join(__dirname, '..', 'workflows', 'it-support-duty-calen
 const ICS_URL =
   'https://calendar.google.com/calendar/ical/jvdiamondtech.com_kd6pnalr81o4a59aog7onc5joc%40group.calendar.google.com/public/basic.ics';
 
-// 期望值來源：Google Calendar 週檢視畫面（2026-07-27 為使用者提供的截圖）
+// ND 期望值來源：Google Calendar 週檢視畫面（2026-07-27 為使用者提供的截圖）
+// FP 期望值來源：ICS 原始 VEVENT（[FP] 皆為單次事件，DTSTART/DTEND 直接涵蓋目標日）
 // 期望值不含日曆標題上的 emoji（[FC] 😼 Hector → Hector）
 const CASES = [
-  { date: '2026-07-27', expect: { ND: 'Wayne', FC: 'Henry' } },
-  { date: '2026-07-20', expect: { ND: 'K11', FC: 'Ziv' } },
-  { date: '2026-07-25', expect: { ND: 'K11', FC: 'Ziv' } },
-  { date: '2026-08-18', expect: { ND: 'Wayne', FC: 'Hector' } },
+  { date: '2026-07-27', expect: { ND: 'Wayne', FP: 'Stephanie' } },
+  { date: '2026-07-20', expect: { ND: 'K11', FP: 'Bruce' } },
+  { date: '2026-07-25', expect: { ND: 'K11', FP: 'Stephanie' } },
+  { date: '2026-08-18', expect: { ND: 'Wayne', FP: 'Ricky' } },
 ];
 
 function fetchIcs() {
